@@ -1,0 +1,163 @@
+.section {
+  width: 100%;
+  padding: 32px 0;
+  background-color: #4B2E14;
+  margin-bottom: 48px;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding: 40px 0;
+    margin-bottom: 64px;
+  }
+}
+
+.container {
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 48px;
+  }
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    margin-bottom: 32px;
+  }
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 640px) {
+  .heading {
+    font-size: 30px;
+  }
+}
+
+@media (min-width: 768px) {
+  .heading {
+    font-size: 36px;
+    margin-top: 40px;
+    margin-bottom: 8px;
+  }
+}
+
+.description {
+  font-size: 16px;
+  color: #fef3c7;
+  max-width: 672px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .description {
+    font-size: 18px;
+  }
+}
+
+.grid {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 80px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+  }
+}
+
+.card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.numberCircle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background-color: #b45309;
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  border-radius: 50%;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .numberCircle {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 640px) {
+  .stepTitle {
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .stepTitle {
+    margin-bottom: 12px;
+  }
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .stepDescription {
+    font-size: 16px;
+  }
+}

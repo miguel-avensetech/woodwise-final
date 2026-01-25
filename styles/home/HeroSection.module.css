@@ -1,0 +1,189 @@
+.heroSection {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+  margin-bottom: 48px;
+}
+
+@media (min-width: 1024px) {
+  .heroSection {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 48px;
+    margin-bottom: 64px;
+  }
+}
+
+@media (min-width: 768px) {
+  .heroSection {
+    margin-bottom: 56px;
+  }
+}
+
+.textContent {
+  order: 2;
+}
+
+@media (min-width: 1024px) {
+  .textContent {
+    order: 1;
+  }
+}
+
+.heading {
+  font-size: 30px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .heading {
+    font-size: 36px;
+  }
+}
+
+@media (min-width: 768px) {
+  .heading {
+    font-size: 48px;
+    margin-bottom: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heading {
+    font-size: 60px;
+  }
+}
+
+.description {
+  font-size: 16px;
+  color: #4b5563;
+  margin-bottom: 24px;
+  line-height: 1.75;
+}
+
+@media (min-width: 640px) {
+  .description {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 768px) {
+  .description {
+    font-size: 20px;
+    margin-bottom: 32px;
+  }
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .buttonContainer {
+    flex-direction: row;
+  }
+}
+
+.primaryButton {
+  background-color: #b45309;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .primaryButton {
+    width: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .primaryButton {
+    padding: 16px 32px;
+    font-size: 18px;
+  }
+}
+
+.primaryButton:hover {
+  background-color: #6B4520;
+}
+
+.secondaryButton {
+  border: 2px solid #4B2E14;
+  color: #4B2E14;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .secondaryButton {
+    width: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .secondaryButton {
+    padding: 16px 32px;
+    font-size: 18px;
+  }
+}
+
+.secondaryButton:hover {
+  background-color: #4B2E14;
+  color: white;
+}
+
+.imageContainer {
+  order: 1;
+}
+
+@media (min-width: 1024px) {
+  .imageContainer {
+    order: 2;
+  }
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: linear-gradient(to bottom right, #fef3c7, #fde68a);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .imageWrapper {
+    height: 400px;
+  }
+}
+
+@media (min-width: 768px) {
+  .imageWrapper {
+    height: 500px;
+  }
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -1,0 +1,50 @@
+.main {
+  min-height: 100vh;
+  background-color: white;
+}
+
+.heroContainer {
+  margin: 0 auto;
+  padding: 16px 16px;
+}
+
+@media (min-width: 640px) {
+  .heroContainer {
+    padding: 16px 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .heroContainer {
+    padding: 24px 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroContainer {
+    padding: 24px 48px;
+  }
+}
+
+.footerContainer {
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .footerContainer {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .footerContainer {
+    padding: 0 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .footerContainer {
+    padding: 0 48px;
+  }
+}

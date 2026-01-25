@@ -1,0 +1,14 @@
+# Image Assets Folder
+
+Store your images here for the WoodWise project.
+
+## Recommended Images:
+- hero-wood.jpg (1200x800px) - Main hero section
+- ai-scan.jpg (600x400px) - AI scanning feature
+- restoration.jpg (600x400px) - Wood restoration
+- calendar.jpg (600x400px) - Maintenance calendar
+- about-us.jpg (600x400px) - About section image
+
+## Usage:
+Reference images in your components using:
+`/assets/images/your-image.jpg`

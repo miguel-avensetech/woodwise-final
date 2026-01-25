@@ -1,0 +1,248 @@
+.settingsContainer {
+  min-height: 100vh;
+  background-color: #FFF7EC;
+}
+
+/* Header Styles */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #FFFFFF;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #E5E5E5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 50px;
+  width: auto;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.navButton {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #5D4E37;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navButton:hover {
+  background-color: #F5F5F5;
+}
+
+.navButton.active {
+  background-color: #FFFFFF;
+  border: 2px solid #8B7355;
+  color: #5D4E37;
+}
+
+/* Main Content */
+.mainContent {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  padding-top: calc(3rem + 82px); /* Add space for fixed header */
+}
+
+/* Page Header */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.backButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.backButton:hover {
+  transform: translateX(-4px);
+}
+
+.backButton svg {
+  stroke: #2C2C2C;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2C2C2C;
+}
+
+/* Settings Options */
+.settingsOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.settingItem:hover {
+  border-color: #8B7355;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.settingLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.settingIcon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F5F5F5;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.settingIcon svg {
+  stroke: #2C2C2C;
+}
+
+.settingText {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #2C2C2C;
+}
+
+.settingArrow {
+  stroke: #999999;
+  transition: all 0.3s ease;
+}
+
+.settingItem:hover .settingArrow {
+  stroke: #5D4E37;
+  transform: translateX(4px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: space-around;
+    flex-wrap: wrap;
+  }
+
+  .navButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .mainContent {
+    padding: 2rem 1rem;
+  }
+
+  .pageHeader {
+    gap: 1rem;
+  }
+
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+
+  .settingItem {
+    padding: 1.25rem;
+  }
+
+  .settingIcon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .settingText {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav {
+    gap: 0.5rem;
+  }
+
+  .navButton {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .mainContent {
+    padding: 1.5rem 1rem;
+  }
+
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+
+  .settingItem {
+    padding: 1rem;
+  }
+
+  .settingLeft {
+    gap: 1rem;
+  }
+
+  .settingIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .settingIcon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .settingText {
+    font-size: 0.95rem;
+  }
+}

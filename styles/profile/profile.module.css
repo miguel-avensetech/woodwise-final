@@ -1,0 +1,286 @@
+.profileContainer {
+  min-height: 100vh;
+  background-color: #FFF7EC;
+}
+
+/* Header Styles */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #FFFFFF;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #E5E5E5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 50px;
+  width: auto;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.navButton {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #5D4E37;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navButton:hover {
+  background-color: #F5F5F5;
+}
+
+.navButton.active {
+  background-color: #FFFFFF;
+  border: 2px solid #8B7355;
+  color: #5D4E37;
+}
+
+/* Main Content */
+.mainContent {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  padding-top: calc(3rem + 82px); /* Add space for fixed header */
+}
+
+/* Profile Header */
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.avatarContainer {
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #E5E5E5;
+}
+
+.profileInfo {
+  flex: 1;
+}
+
+.nameContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.profileName {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2C2C2C;
+}
+
+.editButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.editButton:hover {
+  transform: scale(1.1);
+}
+
+.editButton svg {
+  stroke: #2C2C2C;
+}
+
+.memberSince {
+  font-size: 1rem;
+  color: #666666;
+}
+
+/* Menu Options */
+.menuOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.menuLink {
+  display: block;
+  width: 100%;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.menuItem:hover {
+  border-color: #8B7355;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.menuIcon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F5F5F5;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.menuIcon svg {
+  stroke: #2C2C2C;
+}
+
+.menuText {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #2C2C2C;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: space-around;
+    flex-wrap: wrap;
+  }
+
+  .navButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .mainContent {
+    padding: 2rem 1rem;
+  }
+
+  .profileHeader {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .nameContainer {
+    justify-content: center;
+  }
+
+  .profileName {
+    font-size: 1.5rem;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .menuItem {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .menuIcon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .menuText {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav {
+    gap: 0.5rem;
+  }
+
+  .navButton {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .mainContent {
+    padding: 1.5rem 1rem;
+  }
+
+  .profileHeader {
+    gap: 1rem;
+  }
+
+  .profileName {
+    font-size: 1.25rem;
+  }
+
+  .memberSince {
+    font-size: 0.9rem;
+  }
+
+  .avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .menuItem {
+    padding: 1rem;
+  }
+
+  .menuIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .menuIcon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .menuText {
+    font-size: 0.95rem;
+  }
+}
