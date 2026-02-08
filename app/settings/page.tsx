@@ -4,15 +4,20 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "@/styles/settings/settings.module.css";
+import { logOut } from "@/lib/auth";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("Profile");
   const router = useRouter();
 
-  const handleLogout = () => {
-    // Add logout logic here
-    console.log("Logging out...");
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      await logOut();
+      router.push("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Failed to logout. Please try again.");
+    }
   };
 
   return (

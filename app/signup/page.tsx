@@ -1,22 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "@/styles/auth.module.css";
+import { signUp } from "@/lib/auth";
 
 export default function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
     if (password !== confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Passwords don't match!");
       return;
     }
-    console.log("Sign up:", { name, email, password });
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await signUp(email, password, name);
+      // Redirect to signin page after successful signup
+      router.push("/signin");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +59,12 @@ export default function SignUp() {
         <p className={styles.subtitle}>Join WoodWise to start preserving your wood</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {error && (
+            <div className={styles.errorMessage}>
+              {error}
+            </div>
+          )}
+
           <div className={styles.inputGroup}>
             <label htmlFor="name" className={styles.label}>
               Full Name
@@ -48,6 +77,7 @@ export default function SignUp() {
               className={styles.input}
               placeholder="John Doe"
               required
+              disabled={loading}
             />
           </div>
 
@@ -63,6 +93,7 @@ export default function SignUp() {
               className={styles.input}
               placeholder="you@example.com"
               required
+              disabled={loading}
             />
           </div>
 
@@ -76,9 +107,10 @@ export default function SignUp() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={styles.input}
-              placeholder="Create a password"
+              placeholder="Create a password (min 6 characters)"
               required
-              minLength={8}
+              minLength={6}
+              disabled={loading}
             />
           </div>
 
@@ -94,12 +126,13 @@ export default function SignUp() {
               className={styles.input}
               placeholder="Confirm your password"
               required
-              minLength={8}
+              minLength={6}
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Create Account
+          <button type="submit" className={styles.submitButton} disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 

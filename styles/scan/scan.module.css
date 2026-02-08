@@ -141,6 +141,167 @@
   transition: stroke 0.3s ease;
 }
 
+/* Analyze Button */
+.analyzeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  background-color: #5D4E37;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.analyzeButton:hover:not(:disabled) {
+  background-color: #4B2E14;
+}
+
+.analyzeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error Message */
+.errorMessage {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #FEE;
+  border: 1px solid #F88;
+  border-radius: 8px;
+  color: #C33;
+  text-align: center;
+}
+
+/* Results Container */
+.resultContainer {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #F9F9F9;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.resultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #E5E5E5;
+}
+
+.resultTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2C2C2C;
+}
+
+.resultBadge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.resultBadge.success {
+  background-color: #D4EDDA;
+  color: #155724;
+}
+
+.resultBadge.warning {
+  background-color: #FFF3CD;
+  color: #856404;
+}
+
+.resultItem {
+  margin: 0.75rem 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.resultItem strong {
+  color: #2C2C2C;
+}
+
+.defectsSection,
+.recommendationsSection {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #E5E5E5;
+}
+
+.defectsSection h4,
+.recommendationsSection h4 {
+  font-size: 1.1rem;
+  color: #2C2C2C;
+  margin-bottom: 0.75rem;
+}
+
+.defectsList {
+  list-style: none;
+  padding: 0;
+}
+
+.defectsList li {
+  padding: 0.5rem 0;
+  color: #666;
+  text-transform: capitalize;
+}
+
+.recommendation {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #FFFFFF;
+  border-left: 4px solid #5D4E37;
+  border-radius: 4px;
+}
+
+.recommendation strong {
+  display: block;
+  color: #2C2C2C;
+  margin-bottom: 0.5rem;
+}
+
+.recommendation p {
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.priority {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #F5F5F5;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.newScanButton {
+  margin-top: 1.5rem;
+  padding: 0.875rem 2rem;
+  background-color: #FFFFFF;
+  border: 2px solid #5D4E37;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5D4E37;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.newScanButton:hover {
+  background-color: #5D4E37;
+  color: #FFFFFF;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .header {
