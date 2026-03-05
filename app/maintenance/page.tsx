@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Sidebar from "@/components/layout/Sidebar";
 import styles from "@/styles/maintenance/maintenance.module.css";
 
 interface FurnitureItem {
@@ -12,23 +13,30 @@ interface FurnitureItem {
 }
 
 export default function Maintenance() {
-  const [activeTab, setActiveTab] = useState("Profile");
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 9)); // October 2025
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // Empty array - no furniture scanned yet
   const furnitureItems: FurnitureItem[] = [
+    // Uncomment to show sample furniture
+    /*
     {
       id: "1",
       name: "Outdoor Table",
       status: "Mold Detected",
       icon: "🪑"
     }
+    */
   ];
 
-  // Calendar events for October 2025
-  const events: { [key: number]: string } = {
-    1: "Spray with anti-mold solution",
-    15: "Re-apply anti-mold treatment",
-    31: "Inspect outdoor wood surface"
+  // Calendar events - empty if no scheduled treatments
+  const events: { [key: string]: string } = {
+    // Format: "YYYY-MM-DD": "Event description"
+    // Uncomment to show sample events
+    /*
+    "2025-10-01": "Spray with anti-mold solution",
+    "2025-10-15": "Re-apply anti-mold treatment",
+    "2025-10-31": "Inspect outdoor wood surface"
+    */
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -40,7 +48,29 @@ export default function Maintenance() {
   };
 
   const { firstDay, daysInMonth } = getDaysInMonth(currentMonth);
-  const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase();
+  const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+
+  const isToday = (dayNumber: number) => {
+    const today = new Date();
+    return (
+      dayNumber === today.getDate() &&
+      currentMonth.getMonth() === today.getMonth() &&
+      currentMonth.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const getEventForDay = (dayNumber: number) => {
+    const dateKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+    return events[dateKey];
+  };
 
   const renderCalendar = () => {
     const days = [];
@@ -49,18 +79,19 @@ export default function Maintenance() {
     for (let i = 0; i < totalCells; i++) {
       const dayNumber = i - firstDay + 1;
       const isValidDay = dayNumber > 0 && dayNumber <= daysInMonth;
-      const hasEvent = isValidDay && events[dayNumber];
+      const isTodayDay = isValidDay && isToday(dayNumber);
+      const eventText = isValidDay ? getEventForDay(dayNumber) : null;
 
       days.push(
         <div 
           key={i} 
-          className={`${styles.calendarDay} ${!isValidDay ? styles.emptyDay : ''} ${hasEvent ? styles.eventDay : ''}`}
+          className={`${styles.calendarDay} ${!isValidDay ? styles.emptyDay : ''} ${isTodayDay ? styles.todayDay : ''} ${eventText ? styles.eventDay : ''}`}
         >
           {isValidDay && (
             <>
               <span className={styles.dayNumber}>{dayNumber}</span>
-              {hasEvent && (
-                <div className={styles.eventText}>{events[dayNumber]}</div>
+              {eventText && (
+                <div className={styles.eventText}>{eventText}</div>
               )}
             </>
           )}
@@ -71,94 +102,82 @@ export default function Maintenance() {
     return days;
   };
 
+  const hasFurniture = furnitureItems.length > 0;
+
   return (
     <div className={styles.maintenanceContainer}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.logoContainer}>
-          <img 
-            src="/assets/images/woodwise-logo.png" 
-            alt="WoodWise Logo" 
-            className={styles.logo}
-          />
-        </div>
-        
-        <nav className={styles.nav}>
-          <Link href="/dashboard">
-            <button className={styles.navButton}>
-              Home
-            </button>
-          </Link>
-          <Link href="/scan">
-            <button className={styles.navButton}>
-              Scan
-            </button>
-          </Link>
-          <Link href="/notification">
-            <button className={styles.navButton}>
-              Notification
-            </button>
-          </Link>
-          <Link href="/profile">
-            <button 
-              className={`${styles.navButton} ${activeTab === "Profile" ? styles.active : ""}`}
-            >
-              Profile
-            </button>
-          </Link>
-        </nav>
-      </header>
+      <Sidebar />
 
       {/* Main Content */}
       <main className={styles.mainContent}>
-        {/* Page Header */}
-        <div className={styles.pageHeader}>
-          <Link href="/profile">
-            <button className={styles.backButton}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-            </button>
-          </Link>
-          <div>
-            <h1 className={styles.pageTitle}>Maintenance Schedule</h1>
-            <p className={styles.pageSubtitle}>Keep track of your furniture's maintenance with WoodWise</p>
-          </div>
+        {/* Header Banner */}
+        <div className={styles.headerBanner}>
+          <h1 className={styles.bannerTitle}>Maintenance Schedule</h1>
+          <p className={styles.bannerSubtitle}>Keep track of your furniture care and schedule regular maintenance tasks</p>
         </div>
 
-        {/* Calendar */}
-        <div className={styles.calendarSection}>
-          <h2 className={styles.calendarMonth}>{monthName}</h2>
-          <div className={styles.calendar}>
-            <div className={styles.calendarHeader}>
-              <div className={styles.calendarHeaderDay}>SUN</div>
-              <div className={styles.calendarHeaderDay}>MON</div>
-              <div className={styles.calendarHeaderDay}>TUE</div>
-              <div className={styles.calendarHeaderDay}>WED</div>
-              <div className={styles.calendarHeaderDay}>THU</div>
-              <div className={styles.calendarHeaderDay}>FRI</div>
-              <div className={styles.calendarHeaderDay}>SAT</div>
-            </div>
-            <div className={styles.calendarGrid}>
-              {renderCalendar()}
-            </div>
-          </div>
-        </div>
-
-        {/* Furniture List */}
-        <div className={styles.furnitureSection}>
-          <h2 className={styles.sectionTitle}>My Furniture:</h2>
-          <div className={styles.furnitureList}>
-            {furnitureItems.map((item) => (
-              <div key={item.id} className={styles.furnitureCard}>
-                <div className={styles.furnitureIcon}>{item.icon}</div>
-                <div className={styles.furnitureInfo}>
-                  <span className={styles.furnitureName}>{item.name}</span>
-                  <span className={styles.furnitureStatus}> – {item.status}</span>
+        {/* Two Column Layout */}
+        <div className={styles.contentGrid}>
+          {/* Furniture List - Left Side */}
+          <div className={styles.furnitureSection}>
+            <h2 className={styles.sectionTitle}>My Furniture:</h2>
+            
+            {!hasFurniture ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyStateIcon}>
+                  <img 
+                    src="/assets/icons/calendar-cog.png" 
+                    alt="No furniture" 
+                    className={styles.emptyIcon}
+                  />
                 </div>
-                <button className={styles.furnitureArrow}>▶</button>
+                <h3 className={styles.emptyStateTitle}>No furniture so far</h3>
+                <p className={styles.emptyStateText}>Scan your furniture to start tracking maintenance</p>
+                <Link href="/scan">
+                  <button className={styles.scanButton}>Scan Now</button>
+                </Link>
               </div>
-            ))}
+            ) : (
+              <div className={styles.furnitureList}>
+                {furnitureItems.map((item) => (
+                  <div key={item.id} className={styles.furnitureCard}>
+                    <div className={styles.furnitureIcon}>{item.icon}</div>
+                    <div className={styles.furnitureInfo}>
+                      <span className={styles.furnitureName}>{item.name}</span>
+                      <span className={styles.furnitureStatus}> – {item.status}</span>
+                    </div>
+                    <button className={styles.furnitureArrow}>▶</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Calendar - Right Side */}
+          <div className={styles.calendarSection}>
+            <div className={styles.monthHeader}>
+              <button className={styles.monthNavButton} onClick={goToPreviousMonth} aria-label="Previous month">
+                ◀
+              </button>
+              <h2 className={styles.calendarMonth}>{monthName}</h2>
+              <button className={styles.monthNavButton} onClick={goToNextMonth} aria-label="Next month">
+                ▶
+              </button>
+            </div>
+            <div className={styles.calendar}>
+              <div className={styles.calendarWeekHeader}>
+                <div className={styles.calendarHeaderDay}>SUN</div>
+                <div className={styles.calendarHeaderDay}>MON</div>
+                <div className={styles.calendarHeaderDay}>TUE</div>
+                <div className={styles.calendarHeaderDay}>WED</div>
+                <div className={styles.calendarHeaderDay}>THU</div>
+                <div className={styles.calendarHeaderDay}>FRI</div>
+                <div className={styles.calendarHeaderDay}>SAT</div>
+              </div>
+              <div className={styles.calendarGrid}>
+                {renderCalendar()}
+              </div>
+            </div>
           </div>
         </div>
       </main>

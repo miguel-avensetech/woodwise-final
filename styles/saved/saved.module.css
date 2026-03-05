@@ -1,0 +1,265 @@
+.savedContainer {
+  min-height: 100vh;
+  background-color: #FFF7EC;
+  display: flex;
+}
+
+/* Main Content */
+.mainContent {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem;
+  width: calc(100% - 280px);
+}
+
+/* Header Banner */
+.headerBanner {
+  background: #4B2E14;
+  border-radius: 16px;
+  padding: 2.5rem;
+  margin-bottom: 2.5rem;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bannerTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.bannerSubtitle {
+  font-size: 1.1rem;
+  opacity: 0.95;
+  font-weight: 400;
+}
+
+/* Recommendations List */
+.recommendationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Recommendation Card */
+.recommendationCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.recommendationCard:hover {
+  border-color: #8B7355;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.categoryBadge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background-color: #F5F5F5;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #5D4E37;
+  text-transform: uppercase;
+}
+
+.savedDate {
+  font-size: 0.875rem;
+  color: #999999;
+}
+
+.recommendationTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-bottom: 0.75rem;
+}
+
+.recommendationDescription {
+  font-size: 1rem;
+  color: #666666;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #E5E5E5;
+}
+
+.priorityBadge {
+  padding: 0.375rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.priorityHigh {
+  background-color: #FEE;
+  color: #C33;
+}
+
+.priorityMedium {
+  background-color: #FFF3CD;
+  color: #856404;
+}
+
+.priorityLow {
+  background-color: #D4EDDA;
+  color: #155724;
+}
+
+.removeButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.removeButton:hover {
+  background-color: #FEE;
+  border-color: #F88;
+  color: #C33;
+}
+
+.removeButton:hover svg {
+  stroke: #C33;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  border: 2px dashed #E5E5E5;
+}
+
+.emptyStateIcon {
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.emptyStateTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-bottom: 0.5rem;
+}
+
+.emptyStateText {
+  font-size: 1rem;
+  color: #666666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    padding: 1.5rem;
+  }
+
+  .headerBanner {
+    padding: 1.5rem;
+  }
+
+  .bannerTitle {
+    font-size: 1.5rem;
+  }
+
+  .bannerSubtitle {
+    font-size: 1rem;
+  }
+
+  .recommendationCard {
+    padding: 1.25rem;
+  }
+
+  .recommendationTitle {
+    font-size: 1.1rem;
+  }
+
+  .recommendationDescription {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainContent {
+    margin-left: 200px;
+    width: calc(100% - 200px);
+    padding: 1rem;
+  }
+
+  .headerBanner {
+    padding: 1.25rem;
+  }
+
+  .bannerTitle {
+    font-size: 1.25rem;
+  }
+
+  .bannerSubtitle {
+    font-size: 0.9rem;
+  }
+
+  .recommendationCard {
+    padding: 1rem;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .recommendationTitle {
+    font-size: 1rem;
+  }
+
+  .recommendationDescription {
+    font-size: 0.85rem;
+  }
+
+  .cardFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .removeButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

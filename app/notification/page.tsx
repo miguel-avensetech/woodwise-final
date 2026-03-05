@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Sidebar from "@/components/layout/Sidebar";
 import styles from "@/styles/notification/notification.module.css";
 
 interface Notification {
@@ -14,10 +15,12 @@ interface Notification {
 }
 
 export default function Notification() {
-  const [activeTab, setActiveTab] = useState("Notification");
   const [filter, setFilter] = useState<"all" | "maintenance" | "treatment">("all");
 
   const notifications: Notification[] = [
+    // Empty array - no notifications yet
+    // Uncomment below to show sample notifications
+    /*
     {
       id: "1",
       type: "treatment",
@@ -34,6 +37,7 @@ export default function Notification() {
       time: "1 d ago",
       icon: "🪣"
     }
+    */
   ];
 
   const filteredNotifications = notifications.filter(notif => {
@@ -41,45 +45,11 @@ export default function Notification() {
     return notif.type === filter;
   });
 
+  const hasNotifications = filteredNotifications.length > 0;
+
   return (
     <div className={styles.notificationContainer}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.logoContainer}>
-          <img 
-            src="/assets/images/woodwise-logo.png" 
-            alt="WoodWise Logo" 
-            className={styles.logo}
-          />
-        </div>
-        
-        <nav className={styles.nav}>
-          <Link href="/dashboard">
-            <button className={styles.navButton}>
-              Home
-            </button>
-          </Link>
-          <Link href="/scan">
-            <button className={styles.navButton}>
-              Scan
-            </button>
-          </Link>
-          <button 
-            className={`${styles.navButton} ${activeTab === "Notification" ? styles.active : ""}`}
-            onClick={() => setActiveTab("Notification")}
-          >
-            Notification
-          </button>
-          <Link href="/profile">
-            <button 
-              className={styles.navButton}
-              onClick={() => setActiveTab("Profile")}
-            >
-              Profile
-            </button>
-          </Link>
-        </nav>
-      </header>
+      <Sidebar />
 
       {/* Main Content */}
       <main className={styles.mainContent}>
@@ -105,25 +75,38 @@ export default function Notification() {
           </button>
         </div>
 
-        {/* Notifications List */}
-        <div className={styles.notificationsList}>
-          {filteredNotifications.map((notification) => (
-            <div key={notification.id} className={styles.notificationCard}>
-              <div className={styles.notificationIcon}>{notification.icon}</div>
-              <div className={styles.notificationContent}>
-                <div className={styles.notificationHeader}>
-                  <h3 className={styles.notificationTitle}>{notification.title}</h3>
-                  <span className={styles.notificationTime}>{notification.time}</span>
-                </div>
-                <p className={styles.notificationMessage}>{notification.message}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredNotifications.length === 0 && (
+        {/* Notifications List or Empty State */}
+        {!hasNotifications ? (
           <div className={styles.emptyState}>
-            <p>No notifications in this category</p>
+            <div className={styles.emptyStateIcon}>
+              <img 
+                src="/assets/icons/bell.png" 
+                alt="No notifications" 
+                className={styles.emptyIcon}
+              />
+            </div>
+            <h3 className={styles.emptyStateTitle}>No notifications yet</h3>
+            <p className={styles.emptyStateText}>
+              {filter === "all" 
+                ? "You'll receive notifications about maintenance schedules and treatment reminders here"
+                : `No ${filter} notifications at the moment`
+              }
+            </p>
+          </div>
+        ) : (
+          <div className={styles.notificationsList}>
+            {filteredNotifications.map((notification) => (
+              <div key={notification.id} className={styles.notificationCard}>
+                <div className={styles.notificationIcon}>{notification.icon}</div>
+                <div className={styles.notificationContent}>
+                  <div className={styles.notificationHeader}>
+                    <h3 className={styles.notificationTitle}>{notification.title}</h3>
+                    <span className={styles.notificationTime}>{notification.time}</span>
+                  </div>
+                  <p className={styles.notificationMessage}>{notification.message}</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </main>

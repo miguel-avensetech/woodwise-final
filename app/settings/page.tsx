@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Sidebar from "@/components/layout/Sidebar";
 import styles from "@/styles/settings/settings.module.css";
 import { logOut } from "@/lib/auth";
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState("Profile");
   const router = useRouter();
+  const [notifications, setNotifications] = useState(true);
+  const [emailUpdates, setEmailUpdates] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -22,121 +24,158 @@ export default function Settings() {
 
   return (
     <div className={styles.settingsContainer}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.logoContainer}>
-          <img 
-            src="/assets/images/woodwise-logo.png" 
-            alt="WoodWise Logo" 
-            className={styles.logo}
-          />
-        </div>
-        
-        <nav className={styles.nav}>
-          <Link href="/dashboard">
-            <button className={styles.navButton}>
-              Home
-            </button>
-          </Link>
-          <Link href="/scan">
-            <button className={styles.navButton}>
-              Scan
-            </button>
-          </Link>
-          <Link href="/notification">
-            <button className={styles.navButton}>
-              Notification
-            </button>
-          </Link>
-          <Link href="/profile">
-            <button 
-              className={`${styles.navButton} ${activeTab === "Profile" ? styles.active : ""}`}
-            >
-              Profile
-            </button>
-          </Link>
-        </nav>
-      </header>
+      <Sidebar />
 
       {/* Main Content */}
       <main className={styles.mainContent}>
-        {/* Page Header */}
-        <div className={styles.pageHeader}>
-          <Link href="/profile">
-            <button className={styles.backButton}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-            </button>
-          </Link>
-          <h1 className={styles.pageTitle}>Settings</h1>
+        {/* Header Banner */}
+        <div className={styles.headerBanner}>
+          <h1 className={styles.bannerTitle}>Settings</h1>
+          <p className={styles.bannerSubtitle}>Manage your account and preferences</p>
         </div>
 
-        {/* Settings Options */}
-        <div className={styles.settingsOptions}>
-          <button className={styles.settingItem}>
-            <div className={styles.settingLeft}>
-              <div className={styles.settingIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="5" y="11" width="14" height="10" rx="2" ry="2"/>
-                  <circle cx="12" cy="16" r="1"/>
-                  <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
-                </svg>
+        {/* Settings Grid - 2x2 Layout */}
+        <div className={styles.settingsGrid}>
+          
+          {/* Account Settings */}
+          <section className={styles.settingsSection}>
+            <h2 className={styles.sectionTitle}>Account Settings</h2>
+            
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Full Name</label>
+                <p className={styles.settingValue}>Kendall Jenner</p>
               </div>
-              <span className={styles.settingText}>Change Password</span>
+              <button className={styles.editButton}>Edit</button>
             </div>
-            <svg className={styles.settingArrow} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
 
-          <button className={styles.settingItem}>
-            <div className={styles.settingLeft}>
-              <div className={styles.settingIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Email Address</label>
+                <p className={styles.settingValue}>kendall@example.com</p>
               </div>
-              <span className={styles.settingText}>Help & Support</span>
+              <button className={styles.editButton}>Edit</button>
             </div>
-            <svg className={styles.settingArrow} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
 
-          <button className={styles.settingItem}>
-            <div className={styles.settingLeft}>
-              <div className={styles.settingIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Password</label>
+                <p className={styles.settingValue}>••••••••</p>
+              </div>
+              <button className={styles.editButton}>Change</button>
+            </div>
+          </section>
+
+          {/* Notifications */}
+          <section className={styles.settingsSection}>
+            <h2 className={styles.sectionTitle}>Notifications</h2>
+            
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Push Notifications</label>
+                <p className={styles.settingDescription}>Receive notifications about maintenance schedules</p>
+              </div>
+              <label className={styles.toggle}>
+                <input 
+                  type="checkbox" 
+                  checked={notifications}
+                  onChange={(e) => setNotifications(e.target.checked)}
+                />
+                <span className={styles.toggleSlider}></span>
+              </label>
+            </div>
+
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Email Updates</label>
+                <p className={styles.settingDescription}>Get weekly summaries and tips via email</p>
+              </div>
+              <label className={styles.toggle}>
+                <input 
+                  type="checkbox" 
+                  checked={emailUpdates}
+                  onChange={(e) => setEmailUpdates(e.target.checked)}
+                />
+                <span className={styles.toggleSlider}></span>
+              </label>
+            </div>
+          </section>
+
+          {/* Appearance */}
+          <section className={styles.settingsSection}>
+            <h2 className={styles.sectionTitle}>Appearance</h2>
+            
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Dark Mode</label>
+                <p className={styles.settingDescription}>Switch to dark theme</p>
+              </div>
+              <label className={styles.toggle}>
+                <input 
+                  type="checkbox" 
+                  checked={darkMode}
+                  onChange={(e) => setDarkMode(e.target.checked)}
+                />
+                <span className={styles.toggleSlider}></span>
+              </label>
+            </div>
+
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Language</label>
+                <p className={styles.settingDescription}>Choose your preferred language</p>
+              </div>
+              <button className={styles.editButton}>English</button>
+            </div>
+          </section>
+
+          {/* Support & About */}
+          <section className={`${styles.settingsSection} ${styles.supportSection}`}>
+            <h2 className={styles.sectionTitle}>Support & About</h2>
+            
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Help Center</label>
+                <p className={styles.settingDescription}>Get help and support</p>
+              </div>
+              <button className={styles.linkButton}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </button>
+            </div>
+
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>About WoodWise</label>
+                <p className={styles.settingDescription}>Version 1.0.0</p>
+              </div>
+              <button className={styles.linkButton}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="16" x2="12" y2="12"/>
                   <line x1="12" y1="8" x2="12.01" y2="8"/>
                 </svg>
-              </div>
-              <span className={styles.settingText}>About WoodWise</span>
+              </button>
             </div>
-            <svg className={styles.settingArrow} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
 
-          <button className={styles.settingItem} onClick={handleLogout}>
-            <div className={styles.settingLeft}>
-              <div className={styles.settingIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <label className={styles.settingLabel}>Privacy Policy</label>
+                <p className={styles.settingDescription}>Read our privacy policy</p>
               </div>
-              <span className={styles.settingText}>Logout</span>
+              <button className={styles.linkButton}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </button>
             </div>
-            <svg className={styles.settingArrow} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
+          </section>
+
         </div>
       </main>
     </div>

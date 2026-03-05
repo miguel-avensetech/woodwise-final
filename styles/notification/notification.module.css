@@ -1,68 +1,15 @@
 .notificationContainer {
   min-height: 100vh;
   background-color: #FFF7EC;
-}
-
-/* Header Styles */
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: #FFFFFF;
-  padding: 1rem 2rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #E5E5E5;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  z-index: 1000;
-}
-
-.logoContainer {
-  display: flex;
-  align-items: center;
-}
-
-.logo {
-  height: 50px;
-  width: auto;
-}
-
-.nav {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.navButton {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #5D4E37;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.navButton:hover {
-  background-color: #F5F5F5;
-}
-
-.navButton.active {
-  background-color: #FFFFFF;
-  border: 2px solid #8B7355;
-  color: #5D4E37;
 }
 
 /* Main Content */
 .mainContent {
-  max-width: 1200px;
-  margin: 0 auto;
+  flex: 1;
+  margin-left: 280px;
   padding: 2rem;
-  padding-top: calc(2rem + 82px); /* Add space for fixed header */
+  width: calc(100% - 280px);
 }
 
 /* Filter Tabs */
@@ -161,32 +108,45 @@
 /* Empty State */
 .emptyState {
   text-align: center;
-  padding: 3rem;
-  color: #999999;
+  padding: 4rem 2rem;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  border: 2px dashed #E5E5E5;
+}
+
+.emptyStateIcon {
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.emptyStateTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-bottom: 0.5rem;
+}
+
+.emptyStateText {
   font-size: 1rem;
+  color: #666666;
+  line-height: 1.6;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
-  .nav {
-    width: 100%;
-    justify-content: space-around;
-    flex-wrap: wrap;
-  }
-
-  .navButton {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-
   .mainContent {
-    padding: 1rem;
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    padding: 1.5rem;
   }
 
   .filterTabs {
@@ -219,13 +179,10 @@
 }
 
 @media (max-width: 480px) {
-  .nav {
-    gap: 0.5rem;
-  }
-
-  .navButton {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
+  .mainContent {
+    margin-left: 200px;
+    width: calc(100% - 200px);
+    padding: 1rem;
   }
 
   .filterTabs {

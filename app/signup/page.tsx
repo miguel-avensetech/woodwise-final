@@ -32,11 +32,13 @@ export default function SignUp() {
     setLoading(true);
 
     try {
+      console.log("Attempting signup with:", { email, name });
       await signUp(email, password, name);
       // Redirect to signin page after successful signup
       router.push("/signin");
     } catch (err: any) {
-      setError(err.message);
+      console.error("Signup error:", err);
+      setError(err.message || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }

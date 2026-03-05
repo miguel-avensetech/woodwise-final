@@ -23,11 +23,16 @@ export interface UserData {
 }
 
 /**
- * Sign in with Google
+ * Sign in with Google using popup
  */
 export async function signInWithGoogle(): Promise<UserCredential> {
   try {
     const provider = new GoogleAuthProvider();
+    // Force account selection every time
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
     const userCredential = await signInWithPopup(auth, provider);
     const user = userCredential.user;
 
@@ -57,8 +62,19 @@ export async function signInWithGoogle(): Promise<UserCredential> {
 
     return userCredential;
   } catch (error: any) {
+    console.error("Google sign-in error:", error);
     throw new Error(getAuthErrorMessage(error.code));
   }
+}
+
+/**
+ * Handle redirect result after Google sign-in
+ * Call this on page load to complete the sign-in process
+ * @deprecated - Now using popup instead of redirect
+ */
+export async function handleGoogleRedirect(): Promise<UserCredential | null> {
+  // No longer needed with popup method
+  return null;
 }
 
 /**
@@ -70,9 +86,14 @@ export async function signUp(
   displayName: string
 ): Promise<UserCredential> {
   try {
+    console.log("Firebase auth object:", auth);
+    console.log("Attempting to create user with email:", email);
+    
     // Create user account
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+
+    console.log("User created successfully:", user.uid);
 
     // Update user profile with display name
     await updateProfile(user, {
@@ -90,6 +111,9 @@ export async function signUp(
 
     return userCredential;
   } catch (error: any) {
+    console.error("Firebase signup error:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
     throw new Error(getAuthErrorMessage(error.code));
   }
 }
