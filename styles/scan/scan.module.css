@@ -666,3 +666,166 @@
     font-size: 0.85rem;
   }
 }
+
+/* Details Form Modal */
+.detailsModal {
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  padding: 2.5rem;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.detailsHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detailsIcon {
+  width: 48px;
+  height: 48px;
+  background-color: #FFF3CD;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.detailsIcon svg {
+  stroke: #856404;
+}
+
+.detailsTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2C2C2C;
+}
+
+.defectInfo {
+  background-color: #F9F9F9;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.defectTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-bottom: 0.5rem;
+}
+
+.defectDescription {
+  font-size: 0.95rem;
+  color: #666666;
+  line-height: 1.5;
+}
+
+.formSection {
+  margin-bottom: 2rem;
+}
+
+.formLabel {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2C2C2C;
+  margin-bottom: 1rem;
+}
+
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.optionButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  background-color: #FFFFFF;
+  border: 2px solid #E5E5E5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.optionButton:hover {
+  border-color: #8B7355;
+  background-color: #FFF7EC;
+}
+
+.optionButton.optionSelected {
+  border-color: #5D4E37;
+  background-color: #FFF7EC;
+}
+
+.optionButton svg {
+  stroke: #5D4E37;
+}
+
+.optionButton span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2C2C2C;
+}
+
+.continueButton {
+  width: 100%;
+  padding: 1rem 2rem;
+  background-color: #5D4E37;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.continueButton:hover:not(:disabled) {
+  background-color: #4B2E14;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(93, 78, 55, 0.3);
+}
+
+.continueButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal Responsive */
+@media (max-width: 480px) {
+  .detailsModal {
+    padding: 2rem 1.5rem;
+    max-width: 95%;
+  }
+
+  .detailsHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .detailsTitle {
+    font-size: 1.25rem;
+  }
+
+  .optionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .optionButton {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 1.25rem;
+  }
+}

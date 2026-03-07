@@ -1,19 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import styles from "@/styles/scan/scan.module.css";
-import { analyzeMahoganyImage, MLPrediction } from "@/lib/mlApi";
 
 export default function Scan() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showDetailsForm, setShowDetailsForm] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<MLPrediction | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Form state
+  const [furnitureType, setFurnitureType] = useState<string>("");
+  const [placement, setPlacement] = useState<string>("");
 
   // Cleanup preview URL on unmount
   useEffect(() => {
@@ -38,7 +40,6 @@ export default function Scan() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Revoke old URL if exists
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
@@ -46,7 +47,6 @@ export default function Scan() {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      setResult(null);
       setError(null);
     }
   };
@@ -59,31 +59,61 @@ export default function Scan() {
     document.getElementById('captureInput')?.click();
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = () => {
     if (!selectedFile) {
       setError("Please select an image first");
       return;
     }
+    setShowDetailsForm(true);
+  };
+
+  const handleSubmitDetails = async () => {
+    if (!furnitureType || !placement) {
+      setError("Please select furniture type and placement");
+      return;
+    }
 
     setIsAnalyzing(true);
+    setShowDetailsForm(false);
     setError(null);
 
     try {
-      const prediction = await analyzeMahoganyImage(selectedFile);
+      const reader = new FileReader();
+      reader.readAsDataURL(selectedFile!);
       
-      // After successful analysis, reset to scan screen
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-      
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setResult(null);
-      setIsAnalyzing(false);
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+
+        const response = await fetch('/api/analyze-furniture', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: base64Image,
+            furnitureType,
+            placement,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('API Error:', data);
+          throw new Error(data.error || 'Failed to analyze furniture');
+        }
+        
+        // Save to sessionStorage instead of URL
+        sessionStorage.setItem('treatmentData', JSON.stringify(data));
+        sessionStorage.setItem('furnitureImage', base64Image);
+        
+        // Navigate to results page
+        router.push('/scan/results');
+      };
       
     } catch (err) {
-      setError("Failed to analyze image. Please make sure the ML API is running.");
-      console.error(err);
+      console.error('Error analyzing furniture:', err);
+      setError("Failed to analyze furniture. Please try again.");
       setIsAnalyzing(false);
     }
   };
@@ -93,19 +123,12 @@ export default function Scan() {
     setError(null);
   };
 
-  const handleCloseError = () => {
-    setError(null);
-  };
-
   const handleChangeImage = () => {
-    // Revoke old URL before clearing
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-    
     setSelectedFile(null);
     setPreviewUrl(null);
-    setResult(null);
     setError(null);
   };
 
@@ -113,9 +136,7 @@ export default function Scan() {
     <div className={styles.scanContainer}>
       <Sidebar />
 
-      {/* Main Content */}
       <main className={styles.mainContent}>
-        {/* Header Banner */}
         <div className={styles.headerBanner}>
           <h1 className={styles.bannerTitle}>Scan</h1>
           <p className={styles.bannerSubtitle}>
@@ -155,18 +176,8 @@ export default function Scan() {
 
           {!previewUrl && (
             <div className={styles.buttonGroup}>
-              <button 
-                className={styles.uploadButton}
-                onClick={handleUploadClick}
-              >
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                >
+              <button className={styles.uploadButton} onClick={handleUploadClick}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
@@ -174,18 +185,8 @@ export default function Scan() {
                 Upload Photo
               </button>
               
-              <button 
-                className={styles.captureButton}
-                onClick={handleCaptureClick}
-              >
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                >
+              <button className={styles.captureButton} onClick={handleCaptureClick}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                   <circle cx="12" cy="13" r="4"/>
                 </svg>
@@ -194,110 +195,132 @@ export default function Scan() {
             </div>
           )}
 
-          {previewUrl && !result && (
+          {previewUrl && (
             <div className={styles.actionButtons}>
-              <button 
-                className={styles.changeImageButton}
-                onClick={handleChangeImage}
-              >
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                >
+              <button className={styles.changeImageButton} onClick={handleChangeImage}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="1 4 1 10 7 10"/>
                   <polyline points="23 20 23 14 17 14"/>
                   <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
                 </svg>
                 Change Image
               </button>
-              <button 
-                className={styles.analyzeButton}
-                onClick={handleAnalyze}
-                disabled={isAnalyzing}
-              >
+              <button className={styles.analyzeButton} onClick={handleAnalyze} disabled={isAnalyzing}>
                 {isAnalyzing ? "Analyzing..." : "Analyze Image"}
               </button>
             </div>
           )}
 
-          {result && (
-            <div className={styles.resultContainer}>
-              <div className={styles.resultHeader}>
-                <h3 className={styles.resultTitle}>Analysis Results</h3>
-                <span className={`${styles.resultBadge} ${result.is_mahogany ? styles.success : styles.warning}`}>
-                  {result.wood_type}
-                </span>
+          {error && (
+            <div className={styles.errorToast}>
+              <div className={styles.errorContent}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>{error}</span>
               </div>
-              
-              <div className={styles.resultItem}>
-                <strong>Confidence:</strong> {(result.confidence * 100).toFixed(1)}%
-              </div>
-              
-              <div className={styles.resultItem}>
-                <strong>Status:</strong> {result.status}
-              </div>
-
-              {result.defects.length > 0 && (
-                <div className={styles.defectsSection}>
-                  <h4>Detected Issues:</h4>
-                  <ul className={styles.defectsList}>
-                    {result.defects.map((defect, index) => (
-                      <li key={index}>
-                        {defect.type.replace('_', ' ')} - {defect.severity} 
-                        ({(defect.confidence * 100).toFixed(0)}% confidence)
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {result.recommendations.length > 0 && (
-                <div className={styles.recommendationsSection}>
-                  <h4>Recommendations:</h4>
-                  {result.recommendations.map((rec, index) => (
-                    <div key={index} className={styles.recommendation}>
-                      <strong>{rec.title}</strong>
-                      <p>{rec.description}</p>
-                      <span className={styles.priority}>Priority: {rec.priority}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <button 
-                className={styles.newScanButton}
-                onClick={() => {
-                  // Revoke old URL before clearing
-                  if (previewUrl) {
-                    URL.revokeObjectURL(previewUrl);
-                  }
-                  
-                  setSelectedFile(null);
-                  setPreviewUrl(null);
-                  setResult(null);
-                  setError(null);
-                }}
-              >
-                Scan Another Image
+              <button className={styles.errorCloseButton} onClick={() => setError(null)} aria-label="Close error">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </button>
             </div>
           )}
         </div>
       </main>
 
-      {/* Analyzing Modal */}
+      {showDetailsForm && (
+        <div className={styles.modalOverlay} onClick={() => setShowDetailsForm(false)}>
+          <div className={styles.detailsModal} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.closeButton} onClick={() => setShowDetailsForm(false)} aria-label="Close">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+
+            <div className={styles.detailsHeader}>
+              <div className={styles.detailsIcon}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <h3 className={styles.detailsTitle}>Defect Detected</h3>
+            </div>
+
+            <div className={styles.defectInfo}>
+              <h4 className={styles.defectTitle}>Crack Detected</h4>
+              <p className={styles.defectDescription}>Moderate crack was found on the surface.</p>
+            </div>
+
+            <div className={styles.formSection}>
+              <label className={styles.formLabel}>Type of furniture:</label>
+              <div className={styles.optionGrid}>
+                <button
+                  className={`${styles.optionButton} ${furnitureType === 'Table' ? styles.optionSelected : ''}`}
+                  onClick={() => setFurnitureType('Table')}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="2"/>
+                    <line x1="5" y1="6" x2="5" y2="20"/>
+                    <line x1="19" y1="6" x2="19" y2="20"/>
+                  </svg>
+                  <span>Table</span>
+                </button>
+                <button
+                  className={`${styles.optionButton} ${furnitureType === 'Chair' ? styles.optionSelected : ''}`}
+                  onClick={() => setFurnitureType('Chair')}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 18v-4h16v4M4 14V6h16v8M8 6V4h8v2M8 18v4M16 18v4"/>
+                  </svg>
+                  <span>Chair</span>
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.formSection}>
+              <label className={styles.formLabel}>Where is this furniture usually placed?</label>
+              <div className={styles.optionGrid}>
+                <button
+                  className={`${styles.optionButton} ${placement === 'Indoor' ? styles.optionSelected : ''}`}
+                  onClick={() => setPlacement('Indoor')}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                  <span>Indoor</span>
+                </button>
+                <button
+                  className={`${styles.optionButton} ${placement === 'Outdoor' ? styles.optionSelected : ''}`}
+                  onClick={() => setPlacement('Outdoor')}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                  <span>Outdoor</span>
+                </button>
+              </div>
+            </div>
+
+            <button className={styles.continueButton} onClick={handleSubmitDetails} disabled={!furnitureType || !placement}>
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
       {isAnalyzing && (
         <div className={styles.analyzingOverlay}>
           <div className={styles.analyzingModal}>
-            <button 
-              className={styles.closeButton}
-              onClick={handleCancelAnalysis}
-              aria-label="Close"
-            >
+            <button className={styles.closeButton} onClick={handleCancelAnalysis} aria-label="Close">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
@@ -314,30 +337,6 @@ export default function Scan() {
             <h3 className={styles.analyzingTitle}>AI is analyzing your image</h3>
             <p className={styles.analyzingText}>Please wait while we process your furniture image...</p>
           </div>
-        </div>
-      )}
-
-      {/* Error Toast */}
-      {error && (
-        <div className={styles.errorToast}>
-          <div className={styles.errorContent}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC3545" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span className={styles.errorText}>{error}</span>
-          </div>
-          <button 
-            className={styles.errorCloseButton}
-            onClick={handleCloseError}
-            aria-label="Close error"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
         </div>
       )}
     </div>
