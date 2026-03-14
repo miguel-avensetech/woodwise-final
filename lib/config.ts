@@ -1,2 +1,2 @@
 // OpenAI Configuration
-export const OPENAI_API_KEY = "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";
+export const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";

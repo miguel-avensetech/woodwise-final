@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { compressImage } from "@/lib/imageUtils";
 import Sidebar from "@/components/layout/Sidebar";
 import styles from "@/styles/scan/scan.module.css";
 
@@ -16,6 +17,9 @@ export default function Scan() {
   // Form state
   const [furnitureType, setFurnitureType] = useState<string>("");
   const [placement, setPlacement] = useState<string>("");
+  
+  // AI Analysis results
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
 
   // Cleanup preview URL on unmount
   useEffect(() => {
@@ -59,12 +63,67 @@ export default function Scan() {
     document.getElementById('captureInput')?.click();
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!selectedFile) {
       setError("Please select an image first");
       return;
     }
-    setShowDetailsForm(true);
+
+    setIsAnalyzing(true);
+    setError(null);
+
+    try {
+      // Convert image to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(selectedFile);
+      
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+        
+        // Compress image before sending to API
+        const compressedImage = await compressImage(base64Image, 800, 0.8);
+
+        // Step 1: AI analyzes the image for wood detection and defects
+        const response = await fetch('/api/analyze-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: compressedImage,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('API Error:', data);
+          
+          // If not wood, show error and reset
+          if (data.isWood === false) {
+            setIsAnalyzing(false);
+            setError(data.message || 'This is not wooden furniture. Please upload an image of wooden furniture.');
+            
+            setTimeout(() => {
+              handleChangeImage();
+            }, 3000);
+            return;
+          }
+          
+          throw new Error(data.error || 'Failed to analyze image');
+        }
+        
+        // Store AI analysis and show details form
+        setAiAnalysis(data);
+        setIsAnalyzing(false);
+        setShowDetailsForm(true);
+      };
+      
+    } catch (err) {
+      console.error('Error analyzing image:', err);
+      setError("Failed to analyze image. Please try again.");
+      setIsAnalyzing(false);
+    }
   };
 
   const handleSubmitDetails = async () => {
@@ -83,16 +142,21 @@ export default function Scan() {
       
       reader.onloadend = async () => {
         const base64Image = reader.result as string;
+        
+        // Compress image before sending to API and saving
+        const compressedImage = await compressImage(base64Image, 800, 0.8);
 
-        const response = await fetch('/api/analyze-furniture', {
+        // Step 3: Generate treatment plan with user inputs
+        const response = await fetch('/api/generate-treatment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            image: base64Image,
+            image: compressedImage,
             furnitureType,
             placement,
+            aiAnalysis: aiAnalysis, // Include AI's defect analysis
           }),
         });
 
@@ -100,20 +164,24 @@ export default function Scan() {
 
         if (!response.ok) {
           console.error('API Error:', data);
-          throw new Error(data.error || 'Failed to analyze furniture');
+          throw new Error(data.error || 'Failed to generate treatment');
         }
         
-        // Save to sessionStorage instead of URL
+        // Generate a new unique treatment ID for this scan
+        const newTreatmentId = `treatment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Save to sessionStorage with new ID (using compressed image)
         sessionStorage.setItem('treatmentData', JSON.stringify(data));
-        sessionStorage.setItem('furnitureImage', base64Image);
+        sessionStorage.setItem('furnitureImage', compressedImage);
+        sessionStorage.setItem('treatmentId', newTreatmentId);
         
         // Navigate to results page
         router.push('/scan/results');
       };
       
     } catch (err) {
-      console.error('Error analyzing furniture:', err);
-      setError("Failed to analyze furniture. Please try again.");
+      console.error('Error generating treatment:', err);
+      setError("Failed to generate treatment. Please try again.");
       setIsAnalyzing(false);
     }
   };
@@ -250,13 +318,22 @@ export default function Scan() {
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
               </div>
-              <h3 className={styles.detailsTitle}>Defect Detected</h3>
+              <h3 className={styles.detailsTitle}>Analysis Results</h3>
             </div>
 
-            <div className={styles.defectInfo}>
-              <h4 className={styles.defectTitle}>Crack Detected</h4>
-              <p className={styles.defectDescription}>Moderate crack was found on the surface.</p>
-            </div>
+            {aiAnalysis && (
+              <div className={styles.defectInfo}>
+                <h4 className={styles.defectTitle}>{aiAnalysis.defectType}</h4>
+                <p className={styles.defectDescription}>{aiAnalysis.defectDescription}</p>
+                {aiAnalysis.severity && (
+                  <div className={styles.severityBadge}>
+                    <span className={`${styles.severity} ${styles[`severity${aiAnalysis.severity}`]}`}>
+                      {aiAnalysis.severity} Severity
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className={styles.formSection}>
               <label className={styles.formLabel}>Type of furniture:</label>
