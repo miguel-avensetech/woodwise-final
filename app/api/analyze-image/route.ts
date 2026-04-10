@@ -12,16 +12,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const API_KEY = `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`;
-    
     const openai = new OpenAI({
-      apiKey: API_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     console.log('Analyzing image for wood detection and defects...');
-    console.log('API Key exists:', !!API_KEY);
-    console.log('API Key length:', API_KEY.length);
-    console.log('API Key first 20 chars:', API_KEY.substring(0, 20));
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
