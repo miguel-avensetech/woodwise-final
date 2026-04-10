@@ -12,10 +12,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const API_KEY = `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`;
-    
+    // Hardcoded API key - will work immediately
     const openai = new OpenAI({
-      apiKey: API_KEY,
+      apiKey: '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',
     });
 
     console.log('🔍 Detecting wood in image...');

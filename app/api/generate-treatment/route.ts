@@ -12,8 +12,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Hardcoded API key - will work immediately
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: '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',
     });
 
     console.log('Generating treatment plan...');
