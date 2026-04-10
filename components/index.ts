@@ -1,6 +1,10 @@
 // Layout Components
 export { default as Navbar } from "./layout/Navbar";
 export { default as Footer } from "./layout/Footer";
+export { default as Sidebar } from "./layout/Sidebar";
+
+// UI Components
+export { default as Modal } from "./Modal";
 
 // Home Components
 export { default as HeroSection } from "./home/HeroSection";

@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
-import { collection, doc, setDoc, getDocs, query, orderBy } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import Sidebar from "@/components/layout/Sidebar";
+import Modal from "@/components/Modal";
 import styles from "@/styles/scan/results.module.css";
 
 interface Material {
@@ -22,7 +23,17 @@ interface TreatmentStep {
   title: string;
   description: string;
   steps: string[];
+  scheduledDate?: string;
+  duration?: string;
   checked: boolean;
+}
+
+interface MaintenanceSchedule {
+  title: string;
+  description: string;
+  scheduledDate: string;
+  frequency: string;
+  priority: string;
 }
 
 interface TreatmentData {
@@ -33,6 +44,7 @@ interface TreatmentData {
   materialsNeeded: Material[];
   diyRecipes: Recipe[];
   treatmentSteps: TreatmentStep[];
+  maintenanceSchedule?: MaintenanceSchedule[];
 }
 
 export default function ScanResults() {
@@ -46,8 +58,8 @@ export default function ScanResults() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isDiyOpen, setIsDiyOpen] = useState(false);
   const [treatmentId, setTreatmentId] = useState<string>("");
-  const [isSaving, setIsSaving] = useState(false);
   const [showSavingPopup, setShowSavingPopup] = useState(false);
+  const [showSavedModal, setShowSavedModal] = useState(false);
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('treatmentData');
@@ -135,6 +147,9 @@ export default function ScanResults() {
         const totalSteps = treatmentData.treatmentSteps.length;
         const progress = Math.round((completedSteps / totalSteps) * 100);
 
+        // Use OpenAI-provided schedules from treatmentData
+        const notificationSchedules = generateNotificationSchedulesFromTreatment(treatmentData);
+
         const treatmentEntry = {
           id: treatmentId,
           userId: userId,
@@ -149,6 +164,7 @@ export default function ScanResults() {
           treatmentData: treatmentData,
           checkedSteps: checkedSteps,
           checkedMaterials: checkedMaterials,
+          notificationSchedules: notificationSchedules,
         };
 
         // Save to Firestore: treatments/{treatmentId}
@@ -180,8 +196,7 @@ export default function ScanResults() {
   };
 
   const handleSave = () => {
-    alert('Treatment plan saved!');
-    router.push('/saved');
+    setShowSavedModal(true);
   };
 
   const handleDone = async () => {
@@ -200,6 +215,9 @@ export default function ScanResults() {
       const totalSteps = treatmentData.treatmentSteps.length;
       const progress = Math.round((completedSteps / totalSteps) * 100);
 
+      // Use OpenAI-provided schedules from treatmentData
+      const notificationSchedules = generateNotificationSchedulesFromTreatment(treatmentData);
+
       const treatmentEntry = {
         id: treatmentId,
         userId: userId,
@@ -214,6 +232,7 @@ export default function ScanResults() {
         treatmentData: treatmentData,
         checkedSteps: checkedSteps,
         checkedMaterials: checkedMaterials,
+        notificationSchedules: notificationSchedules,
       };
 
       // Save to Firestore
@@ -255,6 +274,42 @@ export default function ScanResults() {
     if (e.key === 'Enter') {
       setIsEditingTitle(false);
     }
+  };
+
+  // Convert OpenAI-provided schedules to notification format
+  const generateNotificationSchedulesFromTreatment = (data: TreatmentData) => {
+    const schedules: any[] = [];
+
+    // Add treatment step notifications
+    data.treatmentSteps.forEach((step, index) => {
+      if (step.scheduledDate) {
+        schedules.push({
+          type: 'treatment',
+          stepIndex: index,
+          title: step.title,
+          message: step.description,
+          scheduledTime: step.scheduledDate,
+          icon: '🧴',
+          read: false,
+        });
+      }
+    });
+
+    // Add maintenance schedule notifications
+    if (data.maintenanceSchedule) {
+      data.maintenanceSchedule.forEach((maintenance) => {
+        schedules.push({
+          type: 'maintenance',
+          title: maintenance.title,
+          message: maintenance.description,
+          scheduledTime: maintenance.scheduledDate,
+          icon: maintenance.priority === 'high' ? '🔧' : maintenance.priority === 'medium' ? '📋' : '🔍',
+          read: false,
+        });
+      });
+    }
+
+    return schedules;
   };
 
   if (loading || !treatmentData) {
@@ -492,6 +547,16 @@ export default function ScanResults() {
           </div>
         </div>
       )}
+
+      {/* Saved Success Modal */}
+      <Modal
+        isOpen={showSavedModal}
+        onClose={() => setShowSavedModal(false)}
+        title="Treatment Plan Saved!"
+        message="Your treatment plan has been saved successfully."
+        type="success"
+        confirmText="Done"
+      />
     </div>
   );
 }

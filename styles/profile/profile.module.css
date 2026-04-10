@@ -516,3 +516,28 @@
     width: 100%;
   }
 }
+
+/* Loading State */
+.loadingState {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #E5E5E5;
+  border-top-color: #5D4E37;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingState p {
+  font-size: 1rem;
+  color: #666666;
+}

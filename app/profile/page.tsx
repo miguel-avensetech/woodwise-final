@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import Sidebar from "@/components/layout/Sidebar";
+import Modal from "@/components/Modal";
 import styles from "@/styles/profile/profile.module.css";
 import { logOut } from "@/lib/auth";
 
@@ -15,6 +17,14 @@ export default function Profile() {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [memberSince, setMemberSince] = useState<string>("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  // Real stats from Firestore
+  const [totalScans, setTotalScans] = useState(0);
+  const [furnitureItems, setFurnitureItems] = useState(0);
+  const [scheduledTasks, setScheduledTasks] = useState(0);
+  const [savedItems, setSavedItems] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -32,11 +42,49 @@ export default function Profile() {
           });
           setMemberSince(formatted);
         }
+        
+        // Load user stats
+        loadUserStats(user.uid);
+      } else {
+        router.push("/signin");
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
+
+  const loadUserStats = async (userId: string) => {
+    try {
+      setLoading(true);
+      const treatmentsRef = collection(db, 'treatments');
+      const q = query(treatmentsRef, where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      
+      let totalTasks = 0;
+      const treatments = querySnapshot.docs.length;
+      
+      querySnapshot.forEach((doc) => {
+        const treatment = doc.data();
+        
+        // Count scheduled tasks (treatment steps + maintenance schedule)
+        if (treatment.treatmentData?.treatmentSteps) {
+          totalTasks += treatment.treatmentData.treatmentSteps.length;
+        }
+        if (treatment.treatmentData?.maintenanceSchedule) {
+          totalTasks += treatment.treatmentData.maintenanceSchedule.length;
+        }
+      });
+      
+      setTotalScans(treatments);
+      setFurnitureItems(treatments);
+      setScheduledTasks(totalTasks);
+      setSavedItems(treatments);
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -44,17 +92,23 @@ export default function Profile() {
       router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
-      alert("Failed to logout. Please try again.");
+      setShowErrorModal(true);
     }
   };
 
-  const confirmLogout = () => {
-    setShowLogoutModal(true);
-  };
-
-  const cancelLogout = () => {
-    setShowLogoutModal(false);
-  };
+  if (loading) {
+    return (
+      <div className={styles.profileContainer}>
+        <Sidebar />
+        <main className={styles.mainContent}>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Loading profile...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.profileContainer}>
@@ -97,15 +151,15 @@ export default function Profile() {
             
             <div className={styles.quickStats}>
               <div className={styles.quickStatItem}>
-                <span className={styles.quickStatValue}>24</span>
+                <span className={styles.quickStatValue}>{totalScans}</span>
                 <span className={styles.quickStatLabel}>Scans</span>
               </div>
               <div className={styles.quickStatItem}>
-                <span className={styles.quickStatValue}>8</span>
+                <span className={styles.quickStatValue}>{furnitureItems}</span>
                 <span className={styles.quickStatLabel}>Items</span>
               </div>
               <div className={styles.quickStatItem}>
-                <span className={styles.quickStatValue}>5</span>
+                <span className={styles.quickStatValue}>{savedItems}</span>
                 <span className={styles.quickStatLabel}>Saved</span>
               </div>
             </div>
@@ -113,7 +167,10 @@ export default function Profile() {
             <div className={styles.profileDivider}></div>
 
             {/* Logout Button in Profile Card */}
-            <button className={styles.logoutButton} onClick={confirmLogout}>
+            <button 
+              className={styles.logoutButton} 
+              onClick={() => setShowLogoutModal(true)}
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
@@ -130,7 +187,7 @@ export default function Profile() {
               <div className={styles.activityCard}>
                 <div className={styles.activityIcon}>📷</div>
                 <div className={styles.activityInfo}>
-                  <div className={styles.activityValue}>24</div>
+                  <div className={styles.activityValue}>{totalScans}</div>
                   <div className={styles.activityLabel}>Total Scans</div>
                   <div className={styles.activityDescription}>Furniture analyzed</div>
                 </div>
@@ -138,7 +195,7 @@ export default function Profile() {
               <div className={styles.activityCard}>
                 <div className={styles.activityIcon}>🪑</div>
                 <div className={styles.activityInfo}>
-                  <div className={styles.activityValue}>8</div>
+                  <div className={styles.activityValue}>{furnitureItems}</div>
                   <div className={styles.activityLabel}>Furniture Items</div>
                   <div className={styles.activityDescription}>In your collection</div>
                 </div>
@@ -146,7 +203,7 @@ export default function Profile() {
               <div className={styles.activityCard}>
                 <div className={styles.activityIcon}>📅</div>
                 <div className={styles.activityInfo}>
-                  <div className={styles.activityValue}>12</div>
+                  <div className={styles.activityValue}>{scheduledTasks}</div>
                   <div className={styles.activityLabel}>Scheduled Tasks</div>
                   <div className={styles.activityDescription}>Maintenance reminders</div>
                 </div>
@@ -154,7 +211,7 @@ export default function Profile() {
               <div className={styles.activityCard}>
                 <div className={styles.activityIcon}>🔖</div>
                 <div className={styles.activityInfo}>
-                  <div className={styles.activityValue}>5</div>
+                  <div className={styles.activityValue}>{savedItems}</div>
                   <div className={styles.activityLabel}>Saved Items</div>
                   <div className={styles.activityDescription}>Recommendations saved</div>
                 </div>
@@ -166,29 +223,26 @@ export default function Profile() {
       </main>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <div className={styles.modalOverlay} onClick={cancelLogout}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalIcon}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#DC3545" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </div>
-            <h3 className={styles.modalTitle}>Logout Confirmation</h3>
-            <p className={styles.modalMessage}>Are you sure you want to logout?</p>
-            <div className={styles.modalButtons}>
-              <button className={styles.cancelButton} onClick={cancelLogout}>
-                Cancel
-              </button>
-              <button className={styles.confirmButton} onClick={handleLogout}>
-                Yes, Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        type="confirm"
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+      />
+
+      {/* Error Modal */}
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Logout Failed"
+        message="Failed to logout. Please try again."
+        type="error"
+        confirmText="OK"
+      />
     </div>
   );
 }

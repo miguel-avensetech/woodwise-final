@@ -7,6 +7,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { collection, doc, getDocs, deleteDoc, updateDoc, query, orderBy, where } from "firebase/firestore";
 import Sidebar from "@/components/layout/Sidebar";
+import Modal from "@/components/Modal";
 import styles from "@/styles/dashboard/dashboard.module.css";
 
 interface SavedTreatment {
@@ -33,6 +34,8 @@ export default function Dashboard() {
   const [editTitle, setEditTitle] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -113,21 +116,25 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!currentUserId) return;
-    
-    if (confirm('Are you sure you want to delete this treatment plan?')) {
-      try {
-        const treatmentDoc = doc(db, 'treatments', id);
-        
-        await deleteDoc(treatmentDoc);
+    setDeleteTargetId(id);
+    setShowDeleteModal(true);
+  };
 
-        // Update local state
-        const updatedTreatments = savedTreatments.filter((t: SavedTreatment) => t.id !== id);
-        setSavedTreatments(updatedTreatments);
-        setActiveMenu(null);
-      } catch (error) {
-        console.error('Error deleting treatment:', error);
-      }
+  const confirmDelete = async () => {
+    if (!currentUserId || !deleteTargetId) return;
+    
+    try {
+      const treatmentDoc = doc(db, 'treatments', deleteTargetId);
+      
+      await deleteDoc(treatmentDoc);
+
+      // Update local state
+      const updatedTreatments = savedTreatments.filter((t: SavedTreatment) => t.id !== deleteTargetId);
+      setSavedTreatments(updatedTreatments);
+      setActiveMenu(null);
+      setDeleteTargetId(null);
+    } catch (error) {
+      console.error('Error deleting treatment:', error);
     }
   };
 
@@ -280,6 +287,21 @@ export default function Dashboard() {
           )}
         </section>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Treatment Plan"
+        message="Are you sure you want to delete this treatment plan? This action cannot be undone."
+        type="confirm"
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

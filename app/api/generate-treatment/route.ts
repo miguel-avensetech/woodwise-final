@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Hardcoded API key to bypass environment variable issues
-const OPENAI_API_KEY = "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";
-
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
     const { image, furnitureType, placement, aiAnalysis } = await request.json();
@@ -19,9 +12,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const API_KEY = `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`;
+    
+    const openai = new OpenAI({
+      apiKey: API_KEY,
+    });
+
     console.log('Generating treatment plan...');
 
-    // Call OpenAI to generate treatment plan
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -42,6 +40,9 @@ AI ANALYSIS RESULTS:
 - Description: ${aiAnalysis.defectDescription}
 - Severity: ${aiAnalysis.severity || 'Not specified'}
 - Defects Found: ${aiAnalysis.defects?.join(', ') || 'None'}
+
+IMPORTANT: Generate a comprehensive treatment plan with SPECIFIC DATES AND TIMES for each maintenance task.
+Current date and time: ${new Date().toISOString()}
 
 Provide a comprehensive treatment plan in this EXACT JSON format:
 {
@@ -64,14 +65,38 @@ Provide a comprehensive treatment plan in this EXACT JSON format:
     {
       "title": "Phase name (e.g., Preparation, Cleaning, Repair, Drying, Protection)",
       "description": "Brief description",
-      "steps": ["detailed step 1", "detailed step 2", "detailed step 3"]
+      "steps": ["detailed step 1", "detailed step 2", "detailed step 3"],
+      "scheduledDate": "ISO 8601 date string (e.g., 2026-04-15T10:00:00.000Z)",
+      "duration": "estimated time in hours (e.g., 2)"
+    }
+  ],
+  "maintenanceSchedule": [
+    {
+      "title": "Maintenance task title",
+      "description": "What needs to be done",
+      "scheduledDate": "ISO 8601 date string",
+      "frequency": "once, weekly, monthly, quarterly, semi-annually, annually",
+      "priority": "low, medium, high"
     }
   ]
 }
 
+SCHEDULING GUIDELINES:
+- Treatment steps should be scheduled starting from today, with appropriate intervals (e.g., drying time 24-48 hours)
+- Include immediate tasks (today), short-term tasks (1-7 days), and follow-up tasks (1-2 weeks)
+- Maintenance schedule should include:
+  * First inspection (1 week after treatment completion)
+  * Monthly check (30 days)
+  * Quarterly maintenance (90 days)
+  * Semi-annual deep inspection (180 days)
+  * Annual refinishing (365 days)
+- Use realistic time estimates based on the defect severity
+- All dates must be in ISO 8601 format with timezone
+- Schedule times during typical working hours (9 AM - 5 PM)
+
 Provide practical, actionable steps for mahogany wood care.
-Include 5-7 treatment phases.
-Be specific and detailed.`
+Include 5-7 treatment phases with specific dates.
+Be specific and detailed with timing.`
         }
       ],
       max_tokens: 2000,
@@ -84,7 +109,6 @@ Be specific and detailed.`
       throw new Error('No response from OpenAI');
     }
 
-    // Parse the JSON response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Invalid JSON response from OpenAI');

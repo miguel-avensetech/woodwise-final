@@ -1,26 +1,145 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { onAuthStateChanged, updateProfile, updateEmail, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import Sidebar from "@/components/layout/Sidebar";
+import Modal from "@/components/Modal";
 import styles from "@/styles/settings/settings.module.css";
-import { logOut } from "@/lib/auth";
 
 export default function Settings() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Account Settings
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Password Change
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // Notifications
+  const [pushNotifications, setPushNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
+  
+  // Appearance
   const [darkMode, setDarkMode] = useState(false);
+  const [language, setLanguage] = useState("English");
+  
+  // Modals
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        setFullName(currentUser.displayName || "");
+        setEmail(currentUser.email || "");
+        setLoading(false);
+      } else {
+        router.push("/signin");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleUpdateName = async () => {
+    if (!user || !fullName.trim()) {
+      setErrorMessage("Please enter a valid name");
+      setShowErrorModal(true);
+      return;
+    }
+
     try {
-      await logOut();
-      router.push("/");
-    } catch (error) {
-      console.error("Logout error:", error);
-      alert("Failed to logout. Please try again.");
+      await updateProfile(user, {
+        displayName: fullName
+      });
+      setSuccessMessage("Name updated successfully!");
+      setShowSuccessModal(true);
+      setIsEditingName(false);
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to update name");
+      setShowErrorModal(true);
     }
   };
+
+  const handleUpdateEmail = async () => {
+    if (!user || !email.trim()) {
+      setErrorMessage("Please enter a valid email");
+      setShowErrorModal(true);
+      return;
+    }
+
+    try {
+      await updateEmail(user, email);
+      setSuccessMessage("Email updated successfully! Please verify your new email.");
+      setShowSuccessModal(true);
+      setIsEditingEmail(false);
+    } catch (error: any) {
+      if (error.code === 'auth/requires-recent-login') {
+        setErrorMessage("Please sign out and sign in again before changing your email");
+      } else {
+        setErrorMessage(error.message || "Failed to update email");
+      }
+      setShowErrorModal(true);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!user) return;
+
+    if (newPassword.length < 6) {
+      setErrorMessage("Password must be at least 6 characters");
+      setShowErrorModal(true);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMessage("Passwords do not match");
+      setShowErrorModal(true);
+      return;
+    }
+
+    try {
+      await updatePassword(user, newPassword);
+      setSuccessMessage("Password changed successfully!");
+      setShowSuccessModal(true);
+      setIsChangingPassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      if (error.code === 'auth/requires-recent-login') {
+        setErrorMessage("Please sign out and sign in again before changing your password");
+      } else {
+        setErrorMessage(error.message || "Failed to change password");
+      }
+      setShowErrorModal(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.settingsContainer}>
+        <Sidebar />
+        <main className={styles.mainContent}>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Loading settings...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.settingsContainer}>
@@ -44,25 +163,140 @@ export default function Settings() {
             <div className={styles.settingItem}>
               <div className={styles.settingInfo}>
                 <label className={styles.settingLabel}>Full Name</label>
-                <p className={styles.settingValue}>Kendall Jenner</p>
+                {isEditingName ? (
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className={styles.settingInput}
+                    placeholder="Enter your full name"
+                  />
+                ) : (
+                  <p className={styles.settingValue}>{fullName || "Not set"}</p>
+                )}
               </div>
-              <button className={styles.editButton}>Edit</button>
+              {isEditingName ? (
+                <div className={styles.editActions}>
+                  <button 
+                    className={styles.saveButton}
+                    onClick={handleUpdateName}
+                  >
+                    Save
+                  </button>
+                  <button 
+                    className={styles.cancelButton}
+                    onClick={() => {
+                      setIsEditingName(false);
+                      setFullName(user?.displayName || "");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className={styles.editButton}
+                  onClick={() => setIsEditingName(true)}
+                >
+                  Edit
+                </button>
+              )}
             </div>
 
             <div className={styles.settingItem}>
               <div className={styles.settingInfo}>
                 <label className={styles.settingLabel}>Email Address</label>
-                <p className={styles.settingValue}>kendall@example.com</p>
+                {isEditingEmail ? (
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={styles.settingInput}
+                    placeholder="Enter your email"
+                  />
+                ) : (
+                  <p className={styles.settingValue}>{email || "Not set"}</p>
+                )}
               </div>
-              <button className={styles.editButton}>Edit</button>
+              {isEditingEmail ? (
+                <div className={styles.editActions}>
+                  <button 
+                    className={styles.saveButton}
+                    onClick={handleUpdateEmail}
+                  >
+                    Save
+                  </button>
+                  <button 
+                    className={styles.cancelButton}
+                    onClick={() => {
+                      setIsEditingEmail(false);
+                      setEmail(user?.email || "");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className={styles.editButton}
+                  onClick={() => setIsEditingEmail(true)}
+                >
+                  Edit
+                </button>
+              )}
             </div>
 
             <div className={styles.settingItem}>
               <div className={styles.settingInfo}>
                 <label className={styles.settingLabel}>Password</label>
-                <p className={styles.settingValue}>••••••••</p>
+                {isChangingPassword ? (
+                  <div className={styles.passwordInputs}>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className={styles.settingInput}
+                      placeholder="New password (min 6 characters)"
+                    />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={styles.settingInput}
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                ) : (
+                  <p className={styles.settingValue}>••••••••</p>
+                )}
               </div>
-              <button className={styles.editButton}>Change</button>
+              {isChangingPassword ? (
+                <div className={styles.editActions}>
+                  <button 
+                    className={styles.saveButton}
+                    onClick={handleChangePassword}
+                  >
+                    Save
+                  </button>
+                  <button 
+                    className={styles.cancelButton}
+                    onClick={() => {
+                      setIsChangingPassword(false);
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className={styles.editButton}
+                  onClick={() => setIsChangingPassword(true)}
+                >
+                  Change
+                </button>
+              )}
             </div>
           </section>
 
@@ -78,8 +312,8 @@ export default function Settings() {
               <label className={styles.toggle}>
                 <input 
                   type="checkbox" 
-                  checked={notifications}
-                  onChange={(e) => setNotifications(e.target.checked)}
+                  checked={pushNotifications}
+                  onChange={(e) => setPushNotifications(e.target.checked)}
                 />
                 <span className={styles.toggleSlider}></span>
               </label>
@@ -108,15 +342,16 @@ export default function Settings() {
             <div className={styles.settingItem}>
               <div className={styles.settingInfo}>
                 <label className={styles.settingLabel}>Dark Mode</label>
-                <p className={styles.settingDescription}>Switch to dark theme</p>
+                <p className={styles.settingDescription}>Switch to dark theme (Coming soon)</p>
               </div>
               <label className={styles.toggle}>
                 <input 
                   type="checkbox" 
                   checked={darkMode}
                   onChange={(e) => setDarkMode(e.target.checked)}
+                  disabled
                 />
-                <span className={styles.toggleSlider}></span>
+                <span className={`${styles.toggleSlider} ${styles.disabled}`}></span>
               </label>
             </div>
 
@@ -125,7 +360,16 @@ export default function Settings() {
                 <label className={styles.settingLabel}>Language</label>
                 <p className={styles.settingDescription}>Choose your preferred language</p>
               </div>
-              <button className={styles.editButton}>English</button>
+              <select 
+                className={styles.selectInput}
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              >
+                <option value="English">English</option>
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+              </select>
             </div>
           </section>
 
@@ -178,6 +422,26 @@ export default function Settings() {
 
         </div>
       </main>
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Success"
+        message={successMessage}
+        type="success"
+        confirmText="OK"
+      />
+
+      {/* Error Modal */}
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Error"
+        message={errorMessage}
+        type="error"
+        confirmText="OK"
+      />
     </div>
   );
 }

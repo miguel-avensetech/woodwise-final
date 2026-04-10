@@ -50,6 +50,31 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  position: relative;
+}
+
+.navButtonContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.notificationBadge {
+  background-color: #E65100;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1;
+}
+
+.navButton.active .notificationBadge {
+  background-color: #FFFFFF;
+  color: #8B7355;
 }
 
 .navIcon {

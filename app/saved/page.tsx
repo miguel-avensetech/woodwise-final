@@ -1,61 +1,128 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs, doc, deleteDoc, orderBy } from "firebase/firestore";
 import Sidebar from "@/components/layout/Sidebar";
+import Modal from "@/components/Modal";
 import styles from "@/styles/saved/saved.module.css";
 
-interface SavedRecommendation {
+interface SavedTreatment {
   id: string;
   title: string;
   description: string;
-  priority: string;
-  savedDate: string;
-  category: string;
+  image: string;
+  progress: number;
+  furnitureType: string;
+  placement: string;
+  defectType: string;
+  date: string;
+  treatmentData: any;
 }
 
 export default function Saved() {
-  // Empty array - no saved recommendations yet
-  const savedRecommendations: SavedRecommendation[] = [
-    // Uncomment to show sample recommendations
-    /*
-    {
-      id: "1",
-      title: "Apply Anti-Mold Treatment",
-      description: "Use a specialized anti-mold solution to prevent further mold growth. Apply evenly across the affected surface and let it dry for 24 hours.",
-      priority: "high",
-      savedDate: "2 days ago",
-      category: "Treatment"
-    },
-    {
-      id: "2",
-      title: "Regular Varnish Application",
-      description: "Apply a protective varnish layer every 6 months to maintain the wood's finish and protect against moisture damage.",
-      priority: "medium",
-      savedDate: "1 week ago",
-      category: "Maintenance"
-    },
-    {
-      id: "3",
-      title: "Surface Cleaning",
-      description: "Clean the wood surface with a soft cloth and mild wood cleaner. Avoid harsh chemicals that can damage the finish.",
-      priority: "low",
-      savedDate: "2 weeks ago",
-      category: "Care"
-    }
-    */
-  ];
+  const router = useRouter();
+  const [savedTreatments, setSavedTreatments] = useState<SavedTreatment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return styles.priorityHigh;
-      case "medium":
-        return styles.priorityMedium;
-      case "low":
-        return styles.priorityLow;
-      default:
-        return "";
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUserId(user.uid);
+        loadTreatments(user.uid);
+      } else {
+        setCurrentUserId(null);
+        setSavedTreatments([]);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const loadTreatments = async (userId: string) => {
+    try {
+      setLoading(true);
+      const treatmentsRef = collection(db, 'treatments');
+      const q = query(treatmentsRef, where('userId', '==', userId), orderBy('date', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const treatments: SavedTreatment[] = [];
+      querySnapshot.forEach((doc) => {
+        treatments.push(doc.data() as SavedTreatment);
+      });
+      
+      setSavedTreatments(treatments);
+    } catch (error) {
+      console.error('Error loading treatments from Firestore:', error);
+      setSavedTreatments([]);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleViewTreatment = (treatment: SavedTreatment) => {
+    // Store treatment data in sessionStorage to view it
+    sessionStorage.setItem('treatmentData', JSON.stringify(treatment.treatmentData));
+    sessionStorage.setItem('furnitureImage', treatment.image);
+    sessionStorage.setItem('treatmentId', treatment.id);
+    router.push('/scan/results');
+  };
+
+  const handleDelete = (id: string) => {
+    setDeleteTargetId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!currentUserId || !deleteTargetId) return;
+    
+    try {
+      // Close modal first
+      setShowDeleteModal(false);
+      
+      const treatmentDoc = doc(db, 'treatments', deleteTargetId);
+      await deleteDoc(treatmentDoc);
+
+      // Update local state
+      const updatedTreatments = savedTreatments.filter((t) => t.id !== deleteTargetId);
+      setSavedTreatments(updatedTreatments);
+      setDeleteTargetId(null);
+    } catch (error) {
+      console.error('Error deleting treatment:', error);
+      setShowDeleteModal(false);
+      setDeleteTargetId(null);
+    }
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress >= 75) return styles.progressHigh;
+    if (progress >= 50) return styles.progressMedium;
+    return styles.progressLow;
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.savedContainer}>
+        <Sidebar />
+        <main className={styles.mainContent}>
+          <div className={styles.headerBanner}>
+            <h1 className={styles.bannerTitle}>Saved Recommendations</h1>
+            <p className={styles.bannerSubtitle}>Your bookmarked wood care recommendations</p>
+          </div>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Loading saved treatments...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.savedContainer}>
@@ -70,7 +137,7 @@ export default function Saved() {
         </div>
 
         {/* Recommendations List or Empty State */}
-        {savedRecommendations.length === 0 ? (
+        {savedTreatments.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyStateIcon}>
               <img 
@@ -84,30 +151,81 @@ export default function Saved() {
           </div>
         ) : (
           <div className={styles.recommendationsList}>
-          {savedRecommendations.map((rec) => (
-            <div key={rec.id} className={styles.recommendationCard}>
-              <div className={styles.cardHeader}>
-                <div className={styles.categoryBadge}>{rec.category}</div>
-                <span className={styles.savedDate}>{rec.savedDate}</span>
+            {savedTreatments.map((treatment) => (
+              <div key={treatment.id} className={styles.recommendationCard}>
+                <div className={styles.cardImage}>
+                  <img src={treatment.image} alt={treatment.title} />
+                  <div className={styles.categoryBadge}>{treatment.defectType}</div>
+                </div>
+                
+                <div className={styles.cardContent}>
+                  <div className={styles.cardHeader}>
+                    <h3 className={styles.recommendationTitle}>{treatment.title}</h3>
+                    <span className={styles.savedDate}>
+                      {new Date(treatment.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                  
+                  <p className={styles.recommendationDescription}>
+                    {treatment.placement} {treatment.furnitureType} - {treatment.description}
+                  </p>
+                  
+                  <div className={styles.progressSection}>
+                    <div className={styles.progressBar}>
+                      <div 
+                        className={`${styles.progressFill} ${getProgressColor(treatment.progress)}`}
+                        style={{ width: `${treatment.progress}%` }}
+                      ></div>
+                    </div>
+                    <span className={styles.progressText}>{treatment.progress}% Complete</span>
+                  </div>
+                  
+                  <div className={styles.cardFooter}>
+                    <button 
+                      className={styles.removeButton}
+                      onClick={() => handleDelete(treatment.id)}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                      Remove
+                    </button>
+                    <button 
+                      className={styles.viewButton}
+                      onClick={() => handleViewTreatment(treatment)}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                      View Details
+                    </button>
+                  </div>
+                </div>
               </div>
-              <h3 className={styles.recommendationTitle}>{rec.title}</h3>
-              <p className={styles.recommendationDescription}>{rec.description}</p>
-              <div className={styles.cardFooter}>
-                <span className={`${styles.priorityBadge} ${getPriorityColor(rec.priority)}`}>
-                  {rec.priority.toUpperCase()} PRIORITY
-                </span>
-                <button className={styles.removeButton}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
           </div>
         )}
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Remove Treatment"
+        message="Are you sure you want to remove this saved treatment? This action cannot be undone."
+        type="confirm"
+        confirmText="Remove"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

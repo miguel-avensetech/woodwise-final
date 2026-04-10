@@ -126,7 +126,7 @@
   gap: 1.5rem;
   padding: 1.5rem;
   background-color: #FFFFFF;
-  border: 1px solid #E5E5E5;
+  border: 2px solid #E5E5E5;
   border-radius: 12px;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -136,6 +136,12 @@
   border-color: #8B7355;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
+}
+
+.selectedFurniture {
+  border-color: #8B7355 !important;
+  background-color: #FFF7EC !important;
+  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.2) !important;
 }
 
 .furnitureIcon {
@@ -281,11 +287,61 @@
   margin-bottom: 0.25rem;
 }
 
+.eventsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
 .eventText {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #5D4E37;
   line-height: 1.3;
-  margin-top: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background-color: #FFF3E0;
+  border-left: 3px solid #8B7355;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.treatmentEvent {
+  background-color: #E3F2FD;
+  border-left-color: #2196F3;
+  color: #1565C0;
+}
+
+.maintenanceEvent {
+  background-color: #FFF3E0;
+  border-left-color: #FF9800;
+  color: #E65100;
+}
+
+/* Loading State */
+.loadingState {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #E5E5E5;
+  border-top-color: #5D4E37;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingState p {
+  font-size: 1rem;
+  color: #666666;
 }
 
 /* Responsive Design */
@@ -406,5 +462,292 @@
 
   .furnitureInfo {
     font-size: 0.95rem;
+  }
+}
+
+/* Furniture Details Modal */
+.detailsModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.detailsModal {
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: #999999;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background-color: #F5F5F5;
+  color: #2C2C2C;
+}
+
+.modalHeader {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-right: 2rem;
+}
+
+.modalIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.modalTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-bottom: 0.5rem;
+}
+
+.modalSubtitle {
+  font-size: 1rem;
+  color: #666666;
+  font-weight: 500;
+}
+
+.modalImage {
+  width: 100%;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  background-color: #F5F5F5;
+}
+
+.modalImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modalSection {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.modalSection:last-of-type {
+  border-bottom: none;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-bottom: 1rem;
+}
+
+.progressInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progressBar {
+  flex: 1;
+  height: 12px;
+  background-color: #E5E5E5;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  white-space: nowrap;
+}
+
+.stepsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stepItem {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: #F5F5F5;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.stepItem:hover {
+  background-color: #ECECEC;
+}
+
+.stepNumber {
+  width: 32px;
+  height: 32px;
+  background-color: #5D4E37;
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2C2C2C;
+  margin-bottom: 0.25rem;
+}
+
+.stepDate {
+  font-size: 0.875rem;
+  color: #666666;
+  margin: 0;
+}
+
+.maintenanceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.maintenanceItem {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: #FFF9F0;
+  border-left: 3px solid #FF9800;
+  border-radius: 8px;
+}
+
+.maintenanceIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.maintenanceContent {
+  flex: 1;
+}
+
+.maintenanceTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2C2C2C;
+  margin-bottom: 0.25rem;
+}
+
+.maintenanceDate {
+  font-size: 0.875rem;
+  color: #666666;
+  margin: 0;
+}
+
+.closeModalButton {
+  width: 100%;
+  padding: 1rem;
+  background-color: #5D4E37;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.closeModalButton:hover {
+  background-color: #4B2E14;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(93, 78, 55, 0.3);
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+  .detailsModal {
+    max-width: 95%;
+    padding: 1.5rem;
+    max-height: 90vh;
+  }
+
+  .modalIcon {
+    font-size: 3rem;
+  }
+
+  .modalTitle {
+    font-size: 1.5rem;
+  }
+
+  .modalImage {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .detailsModal {
+    padding: 1.25rem;
+  }
+
+  .modalIcon {
+    font-size: 2.5rem;
+  }
+
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+
+  .modalImage {
+    height: 180px;
+  }
+
+  .stepItem {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stepNumber {
+    margin: 0 auto;
   }
 }

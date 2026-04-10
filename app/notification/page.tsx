@@ -1,44 +1,125 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import Sidebar from "@/components/layout/Sidebar";
 import styles from "@/styles/notification/notification.module.css";
 
-interface Notification {
-  id: string;
+interface NotificationSchedule {
   type: "treatment" | "maintenance";
+  stepIndex?: number;
   title: string;
   message: string;
-  time: string;
+  scheduledTime: string;
   icon: string;
+  read: boolean;
+}
+
+interface Notification extends NotificationSchedule {
+  id: string;
+  treatmentTitle: string;
+  timeAgo: string;
+  isPast: boolean;
 }
 
 export default function Notification() {
   const [filter, setFilter] = useState<"all" | "maintenance" | "treatment">("all");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const notifications: Notification[] = [
-    // Empty array - no notifications yet
-    // Uncomment below to show sample notifications
-    /*
-    {
-      id: "1",
-      type: "treatment",
-      title: "Treatment Reminder",
-      message: "Your furniture should be dry now. Time to apply the anti-mold treatment.",
-      time: "1 h ago",
-      icon: "🧴"
-    },
-    {
-      id: "2",
-      type: "maintenance",
-      title: "Maintenance Schedule",
-      message: "It's been 6 months since you applied varnish on your table. Time to inspect the finish — reapply if it looks dull or uneven.",
-      time: "1 d ago",
-      icon: "🪣"
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadNotifications(user.uid);
+      } else {
+        setNotifications([]);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const loadNotifications = async (userId: string) => {
+    try {
+      setLoading(true);
+      const treatmentsRef = collection(db, 'treatments');
+      const q = query(treatmentsRef, where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      
+      const allNotifications: Notification[] = [];
+      const now = new Date();
+
+      querySnapshot.forEach((doc) => {
+        const treatment = doc.data();
+        const schedules = treatment.notificationSchedules || [];
+        
+        schedules.forEach((schedule: NotificationSchedule, index: number) => {
+          const scheduledDate = new Date(schedule.scheduledTime);
+          const isPast = scheduledDate <= now;
+          
+          // Show notifications that are due OR upcoming within 24 hours
+          const hoursDiff = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+          if (isPast || hoursDiff <= 24) {
+            allNotifications.push({
+              id: `${treatment.id}_${index}`,
+              treatmentTitle: treatment.title,
+              timeAgo: isPast ? getTimeAgo(scheduledDate) : getTimeUntil(scheduledDate),
+              isPast: isPast,
+              ...schedule,
+            });
+          }
+        });
+      });
+
+      // Sort by scheduled time (most recent/upcoming first)
+      allNotifications.sort((a, b) => 
+        new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime()
+      );
+
+      setNotifications(allNotifications);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
     }
-    */
-  ];
+  };
+
+  const getTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      return diffMins <= 1 ? 'Just now' : `${diffMins} min ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} h ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  };
+
+  const getTimeUntil = (date: Date): string => {
+    const now = new Date();
+    const diffMs = date.getTime() - now.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+
+    if (diffMins < 60) {
+      return `In ${diffMins} min`;
+    } else if (diffHours < 24) {
+      return `In ${diffHours} h`;
+    } else {
+      return `On ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    }
+  };
 
   const filteredNotifications = notifications.filter(notif => {
     if (filter === "all") return true;
@@ -46,6 +127,25 @@ export default function Notification() {
   });
 
   const hasNotifications = filteredNotifications.length > 0;
+
+  if (loading) {
+    return (
+      <div className={styles.notificationContainer}>
+        <Sidebar />
+        <main className={styles.mainContent}>
+          <div className={styles.filterTabs}>
+            <button className={`${styles.filterButton} ${styles.activeFilter}`}>All</button>
+            <button className={styles.filterButton}>Maintenance</button>
+            <button className={styles.filterButton}>Treatment</button>
+          </div>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Loading notifications...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.notificationContainer}>
@@ -96,14 +196,32 @@ export default function Notification() {
         ) : (
           <div className={styles.notificationsList}>
             {filteredNotifications.map((notification) => (
-              <div key={notification.id} className={styles.notificationCard}>
+              <div 
+                key={notification.id} 
+                className={`${styles.notificationCard} ${!notification.isPast ? styles.upcomingNotification : ''}`}
+              >
                 <div className={styles.notificationIcon}>{notification.icon}</div>
                 <div className={styles.notificationContent}>
                   <div className={styles.notificationHeader}>
-                    <h3 className={styles.notificationTitle}>{notification.title}</h3>
-                    <span className={styles.notificationTime}>{notification.time}</span>
+                    <div>
+                      <h3 className={styles.notificationTitle}>{notification.title}</h3>
+                      <p className={styles.treatmentSubtitle}>{notification.treatmentTitle}</p>
+                    </div>
+                    <span className={`${styles.notificationTime} ${!notification.isPast ? styles.upcomingTime : ''}`}>
+                      {notification.timeAgo}
+                    </span>
                   </div>
                   <p className={styles.notificationMessage}>{notification.message}</p>
+                  <div className={styles.notificationFooter}>
+                    <div className={styles.notificationBadge}>
+                      {notification.type === 'treatment' ? '🧴 Treatment' : '🔧 Maintenance'}
+                    </div>
+                    {!notification.isPast && (
+                      <div className={styles.upcomingBadge}>
+                        ⏰ Upcoming
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

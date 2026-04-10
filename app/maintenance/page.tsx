@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import Sidebar from "@/components/layout/Sidebar";
 import styles from "@/styles/maintenance/maintenance.module.css";
 
@@ -10,33 +13,190 @@ interface FurnitureItem {
   name: string;
   status: string;
   icon: string;
+  image: string;
+  treatmentData: any;
+}
+
+interface CalendarEvent {
+  date: string;
+  title: string;
+  description: string;
+  furnitureName: string;
+  type: 'treatment' | 'maintenance';
+  priority?: string;
 }
 
 export default function Maintenance() {
+  const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [furnitureItems, setFurnitureItems] = useState<FurnitureItem[]>([]);
+  const [events, setEvents] = useState<{ [key: string]: CalendarEvent[] }>({});
+  const [loading, setLoading] = useState(true);
+  const [selectedFurniture, setSelectedFurniture] = useState<string | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedFurnitureDetails, setSelectedFurnitureDetails] = useState<FurnitureItem | null>(null);
 
-  // Empty array - no furniture scanned yet
-  const furnitureItems: FurnitureItem[] = [
-    // Uncomment to show sample furniture
-    /*
-    {
-      id: "1",
-      name: "Outdoor Table",
-      status: "Mold Detected",
-      icon: "🪑"
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadFurnitureAndSchedules(user.uid);
+      } else {
+        setFurnitureItems([]);
+        setEvents({});
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (showDetailsModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-    */
-  ];
 
-  // Calendar events - empty if no scheduled treatments
-  const events: { [key: string]: string } = {
-    // Format: "YYYY-MM-DD": "Event description"
-    // Uncomment to show sample events
-    /*
-    "2025-10-01": "Spray with anti-mold solution",
-    "2025-10-15": "Re-apply anti-mold treatment",
-    "2025-10-31": "Inspect outdoor wood surface"
-    */
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showDetailsModal]);
+
+  const loadFurnitureAndSchedules = async (userId: string) => {
+    try {
+      setLoading(true);
+      const treatmentsRef = collection(db, 'treatments');
+      const q = query(treatmentsRef, where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      
+      const furniture: FurnitureItem[] = [];
+      const calendarEvents: { [key: string]: CalendarEvent[] } = {};
+
+      querySnapshot.forEach((doc) => {
+        const treatment = doc.data();
+        
+        // Add to furniture list
+        furniture.push({
+          id: treatment.id,
+          name: treatment.title,
+          status: treatment.defectType,
+          icon: getFurnitureIcon(treatment.furnitureType),
+          image: treatment.image,
+          treatmentData: treatment.treatmentData,
+        });
+
+        // Process treatment steps with scheduled dates
+        if (treatment.treatmentData?.treatmentSteps) {
+          treatment.treatmentData.treatmentSteps.forEach((step: any) => {
+            if (step.scheduledDate) {
+              const dateKey = formatDateKey(new Date(step.scheduledDate));
+              if (!calendarEvents[dateKey]) {
+                calendarEvents[dateKey] = [];
+              }
+              calendarEvents[dateKey].push({
+                date: step.scheduledDate,
+                title: step.title,
+                description: step.description,
+                furnitureName: treatment.title,
+                type: 'treatment',
+              });
+            }
+          });
+        }
+
+        // Process maintenance schedule
+        if (treatment.treatmentData?.maintenanceSchedule) {
+          treatment.treatmentData.maintenanceSchedule.forEach((maintenance: any) => {
+            if (maintenance.scheduledDate) {
+              const dateKey = formatDateKey(new Date(maintenance.scheduledDate));
+              if (!calendarEvents[dateKey]) {
+                calendarEvents[dateKey] = [];
+              }
+              calendarEvents[dateKey].push({
+                date: maintenance.scheduledDate,
+                title: maintenance.title,
+                description: maintenance.description,
+                furnitureName: treatment.title,
+                type: 'maintenance',
+                priority: maintenance.priority,
+              });
+            }
+          });
+        }
+      });
+
+      setFurnitureItems(furniture);
+      setEvents(calendarEvents);
+    } catch (error) {
+      console.error('Error loading furniture and schedules:', error);
+      setFurnitureItems([]);
+      setEvents({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDateKey = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getFurnitureIcon = (type: string): string => {
+    const typeMap: { [key: string]: string } = {
+      'table': '🪑',
+      'chair': '🪑',
+      'cabinet': '🗄️',
+      'desk': '🪑',
+      'shelf': '📚',
+      'door': '🚪',
+      'bed': '🛏️',
+      'bench': '🪑',
+    };
+    
+    const lowerType = type.toLowerCase();
+    for (const key in typeMap) {
+      if (lowerType.includes(key)) {
+        return typeMap[key];
+      }
+    }
+    return '🪵';
+  };
+
+  const calculateProgress = (treatmentData: any): number => {
+    if (!treatmentData?.treatmentSteps) return 0;
+    const total = treatmentData.treatmentSteps.length;
+    const now = new Date();
+    const completed = treatmentData.treatmentSteps.filter((step: any) => {
+      if (!step.scheduledDate) return false;
+      return new Date(step.scheduledDate) <= now;
+    }).length;
+    return Math.round((completed / total) * 100);
+  };
+
+  const getProgressColor = (progress: number): string => {
+    if (progress >= 75) return '#4CAF50';
+    if (progress >= 50) return '#FF9800';
+    return '#2196F3';
+  };
+
+  const handleFurnitureClick = (furnitureId: string) => {
+    const furniture = furnitureItems.find(f => f.id === furnitureId);
+    if (furniture) {
+      setSelectedFurnitureDetails(furniture);
+      setShowDetailsModal(true);
+    }
+    // Also toggle selection for calendar filtering
+    setSelectedFurniture(selectedFurniture === furnitureId ? null : furnitureId);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    // Small delay before clearing the details to allow animation
+    setTimeout(() => {
+      setSelectedFurnitureDetails(null);
+    }, 200);
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -67,9 +227,9 @@ export default function Maintenance() {
     );
   };
 
-  const getEventForDay = (dayNumber: number) => {
+  const getEventForDay = (dayNumber: number): CalendarEvent[] => {
     const dateKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
-    return events[dateKey];
+    return events[dateKey] || [];
   };
 
   const renderCalendar = () => {
@@ -80,18 +240,39 @@ export default function Maintenance() {
       const dayNumber = i - firstDay + 1;
       const isValidDay = dayNumber > 0 && dayNumber <= daysInMonth;
       const isTodayDay = isValidDay && isToday(dayNumber);
-      const eventText = isValidDay ? getEventForDay(dayNumber) : null;
+      const dayEvents = isValidDay ? getEventForDay(dayNumber) : [];
+      const hasEvents = dayEvents.length > 0;
+
+      // Filter events if a furniture is selected
+      const filteredEvents = selectedFurniture
+        ? dayEvents.filter(e => {
+            const furniture = furnitureItems.find(f => f.name === e.furnitureName);
+            return furniture?.id === selectedFurniture;
+          })
+        : dayEvents;
+
+      const showEvents = filteredEvents.length > 0;
 
       days.push(
         <div 
           key={i} 
-          className={`${styles.calendarDay} ${!isValidDay ? styles.emptyDay : ''} ${isTodayDay ? styles.todayDay : ''} ${eventText ? styles.eventDay : ''}`}
+          className={`${styles.calendarDay} ${!isValidDay ? styles.emptyDay : ''} ${isTodayDay ? styles.todayDay : ''} ${showEvents ? styles.eventDay : ''}`}
         >
           {isValidDay && (
             <>
               <span className={styles.dayNumber}>{dayNumber}</span>
-              {eventText && (
-                <div className={styles.eventText}>{eventText}</div>
+              {showEvents && (
+                <div className={styles.eventsContainer}>
+                  {filteredEvents.map((event, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`${styles.eventText} ${event.type === 'maintenance' ? styles.maintenanceEvent : styles.treatmentEvent}`}
+                      title={`${event.furnitureName}: ${event.description}`}
+                    >
+                      {event.type === 'maintenance' ? '🔧' : '🧴'} {event.title}
+                    </div>
+                  ))}
+                </div>
               )}
             </>
           )}
@@ -103,6 +284,20 @@ export default function Maintenance() {
   };
 
   const hasFurniture = furnitureItems.length > 0;
+
+  if (loading) {
+    return (
+      <div className={styles.maintenanceContainer}>
+        <Sidebar />
+        <main className={styles.mainContent}>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Loading maintenance schedule...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.maintenanceContainer}>
@@ -133,20 +328,29 @@ export default function Maintenance() {
                 </div>
                 <h3 className={styles.emptyStateTitle}>No furniture so far</h3>
                 <p className={styles.emptyStateText}>Scan your furniture to start tracking maintenance</p>
-                <Link href="/scan">
-                  <button className={styles.scanButton}>Scan Now</button>
-                </Link>
+                <button 
+                  className={styles.scanButton}
+                  onClick={() => router.push('/scan')}
+                >
+                  Scan Now
+                </button>
               </div>
             ) : (
               <div className={styles.furnitureList}>
                 {furnitureItems.map((item) => (
-                  <div key={item.id} className={styles.furnitureCard}>
+                  <div 
+                    key={item.id} 
+                    className={`${styles.furnitureCard} ${selectedFurniture === item.id ? styles.selectedFurniture : ''}`}
+                    onClick={() => handleFurnitureClick(item.id)}
+                  >
                     <div className={styles.furnitureIcon}>{item.icon}</div>
                     <div className={styles.furnitureInfo}>
                       <span className={styles.furnitureName}>{item.name}</span>
                       <span className={styles.furnitureStatus}> – {item.status}</span>
                     </div>
-                    <button className={styles.furnitureArrow}>▶</button>
+                    <button className={styles.furnitureArrow}>
+                      {selectedFurniture === item.id ? '▼' : '▶'}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -181,6 +385,115 @@ export default function Maintenance() {
           </div>
         </div>
       </main>
+
+      {/* Furniture Details Modal */}
+      {showDetailsModal && selectedFurnitureDetails && (
+        <div className={styles.detailsModalOverlay} onClick={closeDetailsModal}>
+          <div className={styles.detailsModal} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.closeButton}
+              onClick={closeDetailsModal}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+
+            <div className={styles.modalHeader}>
+              <div className={styles.modalIcon}>{selectedFurnitureDetails.icon}</div>
+              <h2 className={styles.modalTitle}>{selectedFurnitureDetails.name}</h2>
+              <p className={styles.modalSubtitle}>{selectedFurnitureDetails.status}</p>
+            </div>
+
+            {selectedFurnitureDetails.image && (
+              <div className={styles.modalImage}>
+                <img src={selectedFurnitureDetails.image} alt={selectedFurnitureDetails.name} />
+              </div>
+            )}
+
+            {selectedFurnitureDetails.treatmentData && (
+              <>
+                <div className={styles.modalSection}>
+                  <h3 className={styles.sectionTitle}>Treatment Progress</h3>
+                  <div className={styles.progressInfo}>
+                    <div className={styles.progressBar}>
+                      <div 
+                        className={styles.progressFill}
+                        style={{ 
+                          width: `${calculateProgress(selectedFurnitureDetails.treatmentData)}%`,
+                          backgroundColor: getProgressColor(calculateProgress(selectedFurnitureDetails.treatmentData))
+                        }}
+                      ></div>
+                    </div>
+                    <span className={styles.progressText}>
+                      {calculateProgress(selectedFurnitureDetails.treatmentData)}% Complete
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.modalSection}>
+                  <h3 className={styles.sectionTitle}>Treatment Steps</h3>
+                  <div className={styles.stepsList}>
+                    {selectedFurnitureDetails.treatmentData.treatmentSteps?.map((step: any, index: number) => (
+                      <div key={index} className={styles.stepItem}>
+                        <div className={styles.stepNumber}>{index + 1}</div>
+                        <div className={styles.stepContent}>
+                          <h4 className={styles.stepTitle}>{step.title}</h4>
+                          {step.scheduledDate && (
+                            <p className={styles.stepDate}>
+                              📅 {new Date(step.scheduledDate).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {selectedFurnitureDetails.treatmentData.maintenanceSchedule && 
+                 selectedFurnitureDetails.treatmentData.maintenanceSchedule.length > 0 && (
+                  <div className={styles.modalSection}>
+                    <h3 className={styles.sectionTitle}>Upcoming Maintenance</h3>
+                    <div className={styles.maintenanceList}>
+                      {selectedFurnitureDetails.treatmentData.maintenanceSchedule.slice(0, 3).map((maintenance: any, index: number) => (
+                        <div key={index} className={styles.maintenanceItem}>
+                          <div className={styles.maintenanceIcon}>
+                            {maintenance.priority === 'high' ? '🔴' : maintenance.priority === 'medium' ? '🟡' : '🟢'}
+                          </div>
+                          <div className={styles.maintenanceContent}>
+                            <h4 className={styles.maintenanceTitle}>{maintenance.title}</h4>
+                            <p className={styles.maintenanceDate}>
+                              {new Date(maintenance.scheduledDate).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            <button 
+              className={styles.closeModalButton}
+              onClick={closeDetailsModal}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

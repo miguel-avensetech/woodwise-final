@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Hardcoded API key to bypass environment variable issues
-const OPENAI_API_KEY = "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";
-
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
     const { image } = await request.json();
@@ -19,11 +12,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Analyzing image for wood detection and defects...');
-    console.log('API Key exists:', !!OPENAI_API_KEY);
-    console.log('API Key length:', OPENAI_API_KEY.length);
+    const API_KEY = `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`;
+    
+    const openai = new OpenAI({
+      apiKey: API_KEY,
+    });
 
-    // Call OpenAI Vision API to analyze the image
+    console.log('Analyzing image for wood detection and defects...');
+    console.log('API Key exists:', !!API_KEY);
+    console.log('API Key length:', API_KEY.length);
+    console.log('API Key first 20 chars:', API_KEY.substring(0, 20));
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -88,7 +87,6 @@ Be accurate and thorough.`
       throw new Error('No response from OpenAI');
     }
 
-    // Parse the JSON response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Invalid JSON response from OpenAI');
@@ -96,7 +94,6 @@ Be accurate and thorough.`
 
     const analysisData = JSON.parse(jsonMatch[0]);
 
-    // Check if it's wood
     if (analysisData.isWood === false) {
       return NextResponse.json(
         { 

@@ -1,38 +1,41 @@
 .settingsContainer {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #FFF7EC;
   display: flex;
+  overflow: hidden;
 }
 
 /* Main Content */
 .mainContent {
   flex: 1;
   margin-left: 280px;
-  padding: 2rem;
+  padding: 1.5rem;
   width: calc(100% - 280px);
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Header Banner */
 .headerBanner {
   background: #4B2E14;
   border-radius: 16px;
-  padding: 2.5rem;
-  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
 .bannerTitle {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .bannerSubtitle {
-  font-size: 1.1rem;
+  font-size: 1rem;
   opacity: 0.95;
   font-weight: 400;
 }
@@ -41,32 +44,35 @@
 .settingsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 2rem;
-  align-items: start;
+  grid-template-rows: 1fr 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  overflow: hidden;
 }
 
 .settingsSection {
   background-color: #FFFFFF;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  height: fit-content;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .supportSection {
-  margin-top: -5.3rem;
+  margin-top: 0;
 }
 
 .sectionTitle {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #2C2C2C;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid #E5E5E5;
+  flex-shrink: 0;
 }
 
 /* Setting Item */
@@ -74,7 +80,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 0;
+  padding: 0.75rem 0;
   border-bottom: 1px solid #F5F5F5;
 }
 
@@ -89,7 +95,7 @@
 
 .settingLabel {
   display: block;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #2C2C2C;
   margin-bottom: 0.25rem;
@@ -317,4 +323,157 @@
   .settingDescription {
     font-size: 0.85rem;
   }
+}
+
+/* Logout Section */
+.logoutSection {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #E5E5E5;
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background-color: #F44336;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  justify-content: center;
+}
+
+.logoutButton:hover {
+  background-color: #D32F2F;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.logoutButton svg {
+  flex-shrink: 0;
+}
+
+/* Edit Actions */
+.editActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.saveButton {
+  padding: 0.5rem 1.25rem;
+  background-color: #5D4E37;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.saveButton:hover {
+  background-color: #4B2E14;
+  transform: translateY(-1px);
+}
+
+.cancelButton {
+  padding: 0.5rem 1.25rem;
+  background-color: transparent;
+  border: 2px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancelButton:hover {
+  border-color: #CCCCCC;
+  background-color: #F5F5F5;
+}
+
+/* Input Fields */
+.settingInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #2C2C2C;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.settingInput:focus {
+  outline: none;
+  border-color: #5D4E37;
+  box-shadow: 0 0 0 3px rgba(93, 78, 55, 0.1);
+}
+
+.passwordInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.selectInput {
+  padding: 0.5rem 1rem;
+  border: 2px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5D4E37;
+  background-color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.selectInput:hover {
+  border-color: #5D4E37;
+}
+
+.selectInput:focus {
+  outline: none;
+  border-color: #5D4E37;
+  box-shadow: 0 0 0 3px rgba(93, 78, 55, 0.1);
+}
+
+/* Loading State */
+.loadingState {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #E5E5E5;
+  border-top-color: #5D4E37;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingState p {
+  font-size: 1rem;
+  color: #666666;
+}
+
+/* Disabled Toggle */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
