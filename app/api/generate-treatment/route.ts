@@ -12,9 +12,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hardcoded API key - will work immediately
     const openai = new OpenAI({
-      apiKey: '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',
+      apiKey: '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',
     });
 
     console.log('Generating treatment plan...');
