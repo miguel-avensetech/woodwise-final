@@ -12,11 +12,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hardcoded API key - will work immediately
-    const apiKey = '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';
-    
     const openai = new OpenAI({
-      apiKey: apiKey,
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     console.log('Analyzing image for wood detection and defects...');
