@@ -60,14 +60,13 @@ export default function Notification() {
           const scheduledDate = new Date(schedule.scheduledTime);
           const isPast = scheduledDate <= now;
           
-          // Show notifications that are due OR upcoming within 24 hours
-          const hoursDiff = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-          if (isPast || hoursDiff <= 24) {
+          // Only show notifications that are due (scheduled time has passed)
+          if (isPast) {
             allNotifications.push({
               id: `${treatment.id}_${index}`,
               treatmentTitle: treatment.title,
-              timeAgo: isPast ? getTimeAgo(scheduledDate) : getTimeUntil(scheduledDate),
-              isPast: isPast,
+              timeAgo: getTimeAgo(scheduledDate),
+              isPast: true,
               ...schedule,
             });
           }
@@ -198,7 +197,7 @@ export default function Notification() {
             {filteredNotifications.map((notification) => (
               <div 
                 key={notification.id} 
-                className={`${styles.notificationCard} ${!notification.isPast ? styles.upcomingNotification : ''}`}
+                className={styles.notificationCard}
               >
                 <div className={styles.notificationIcon}>{notification.icon}</div>
                 <div className={styles.notificationContent}>
@@ -207,7 +206,7 @@ export default function Notification() {
                       <h3 className={styles.notificationTitle}>{notification.title}</h3>
                       <p className={styles.treatmentSubtitle}>{notification.treatmentTitle}</p>
                     </div>
-                    <span className={`${styles.notificationTime} ${!notification.isPast ? styles.upcomingTime : ''}`}>
+                    <span className={styles.notificationTime}>
                       {notification.timeAgo}
                     </span>
                   </div>
@@ -216,11 +215,6 @@ export default function Notification() {
                     <div className={styles.notificationBadge}>
                       {notification.type === 'treatment' ? '🧴 Treatment' : '🔧 Maintenance'}
                     </div>
-                    {!notification.isPast && (
-                      <div className={styles.upcomingBadge}>
-                        ⏰ Upcoming
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

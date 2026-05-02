@@ -12,12 +12,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Using hardcoded API key for Vercel deployment
     const openai = new OpenAI({
-      apiKey: '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',
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
-    console.log('Analyzing image for wood detection and defects - Vercel deployment');
+    console.log('Analyzing image for wood detection and defects');
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

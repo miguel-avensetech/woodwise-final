@@ -52,6 +52,7 @@ export default function ScanResults() {
   const [loading, setLoading] = useState(true);
   const [treatmentData, setTreatmentData] = useState<TreatmentData | null>(null);
   const [checkedSteps, setCheckedSteps] = useState<{ [key: number]: boolean }>({});
+  const [checkedSubSteps, setCheckedSubSteps] = useState<{ [key: string]: boolean }>({});
   const [checkedMaterials, setCheckedMaterials] = useState<{ [key: number]: boolean }>({});
   const [imageUrl, setImageUrl] = useState<string>("");
   const [planTitle, setPlanTitle] = useState<string>("");
@@ -60,6 +61,7 @@ export default function ScanResults() {
   const [treatmentId, setTreatmentId] = useState<string>("");
   const [showSavingPopup, setShowSavingPopup] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
+  const [mahoganyData, setMahoganyData] = useState<any>(null);
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('treatmentData');
@@ -76,6 +78,16 @@ export default function ScanResults() {
           setImageUrl(storedImage);
         }
 
+        // Get mahogany classification from treatment data or sessionStorage
+        if (parsed.mahoganyClassification) {
+          setMahoganyData(parsed.mahoganyClassification);
+        } else {
+          const storedMahogany = sessionStorage.getItem('mahoganyClassification');
+          if (storedMahogany) {
+            setMahoganyData(JSON.parse(storedMahogany));
+          }
+        }
+
         // Set or create treatment ID
         let currentId = storedId;
         if (!currentId) {
@@ -89,7 +101,10 @@ export default function ScanResults() {
         const loadExistingTreatment = async () => {
           try {
             const userId = auth.currentUser?.uid;
-            if (!userId) return;
+            if (!userId) {
+              setLoading(false);
+              return;
+            }
 
             const treatmentDocRef = doc(db, 'treatments', currentId);
             
@@ -105,22 +120,26 @@ export default function ScanResults() {
                 if (existingTreatment.checkedSteps) {
                   setCheckedSteps(existingTreatment.checkedSteps);
                 }
+                if (existingTreatment.checkedSubSteps) {
+                  setCheckedSubSteps(existingTreatment.checkedSubSteps);
+                }
                 if (existingTreatment.checkedMaterials) {
                   setCheckedMaterials(existingTreatment.checkedMaterials);
                 }
                 if (existingTreatment.title) {
                   setPlanTitle(existingTreatment.title);
                 }
+                console.log('Restored checkbox states from Firestore');
               }
             }
+            setLoading(false);
           } catch (error) {
             console.warn('Could not load existing treatment:', error);
+            setLoading(false);
           }
         };
 
         loadExistingTreatment();
-        
-        setLoading(false);
       } catch (error) {
         console.error('Error parsing treatment data:', error);
         router.push('/scan');
@@ -143,9 +162,10 @@ export default function ScanResults() {
           return;
         }
 
-        const completedSteps = Object.values(checkedSteps).filter(Boolean).length;
-        const totalSteps = treatmentData.treatmentSteps.length;
-        const progress = Math.round((completedSteps / totalSteps) * 100);
+        // Calculate progress based on substeps
+        const totalSubSteps = treatmentData.treatmentSteps.reduce((sum, step) => sum + step.steps.length, 0);
+        const checkedSubStepsCount = Object.values(checkedSubSteps).filter(Boolean).length;
+        const progress = totalSubSteps > 0 ? Math.round((checkedSubStepsCount / totalSubSteps) * 100) : 0;
 
         // Use OpenAI-provided schedules from treatmentData
         const notificationSchedules = generateNotificationSchedulesFromTreatment(treatmentData);
@@ -163,6 +183,7 @@ export default function ScanResults() {
           date: new Date().toISOString(),
           treatmentData: treatmentData,
           checkedSteps: checkedSteps,
+          checkedSubSteps: checkedSubSteps,
           checkedMaterials: checkedMaterials,
           notificationSchedules: notificationSchedules,
         };
@@ -179,13 +200,51 @@ export default function ScanResults() {
     // Debounce auto-save by 300ms
     const timeoutId = setTimeout(autoSave, 300);
     return () => clearTimeout(timeoutId);
-  }, [checkedSteps, checkedMaterials, planTitle, treatmentData, treatmentId, imageUrl, loading]);
+  }, [checkedSteps, checkedSubSteps, checkedMaterials, planTitle, treatmentData, treatmentId, imageUrl, loading]);
 
   const handleStepCheck = (index: number) => {
+    const newChecked = !checkedSteps[index];
     setCheckedSteps(prev => ({
       ...prev,
-      [index]: !prev[index]
+      [index]: newChecked
     }));
+
+    // Check/uncheck all substeps when main step is toggled
+    if (treatmentData) {
+      const step = treatmentData.treatmentSteps[index];
+      const newSubSteps = { ...checkedSubSteps };
+      step.steps.forEach((_, subIndex) => {
+        newSubSteps[`${index}-${subIndex}`] = newChecked;
+      });
+      setCheckedSubSteps(newSubSteps);
+    }
+  };
+
+  const handleSubStepCheck = (stepIndex: number, subStepIndex: number) => {
+    const key = `${stepIndex}-${subStepIndex}`;
+    const newChecked = !checkedSubSteps[key];
+    
+    setCheckedSubSteps(prev => ({
+      ...prev,
+      [key]: newChecked
+    }));
+
+    // Check if all substeps are checked
+    if (treatmentData) {
+      const step = treatmentData.treatmentSteps[stepIndex];
+      const allSubStepsChecked = step.steps.every((_, subIndex) => {
+        const subKey = `${stepIndex}-${subIndex}`;
+        return subKey === key ? newChecked : checkedSubSteps[subKey];
+      });
+
+      // Update main step checkbox if all substeps are checked
+      if (allSubStepsChecked !== checkedSteps[stepIndex]) {
+        setCheckedSteps(prev => ({
+          ...prev,
+          [stepIndex]: allSubStepsChecked
+        }));
+      }
+    }
   };
 
   const handleMaterialCheck = (index: number) => {
@@ -195,8 +254,23 @@ export default function ScanResults() {
     }));
   };
 
-  const handleSave = () => {
-    setShowSavedModal(true);
+  const handleSave = async () => {
+    try {
+      const userId = auth.currentUser?.uid;
+      if (!userId || !treatmentId) {
+        setShowSavedModal(true);
+        return;
+      }
+
+      // Mark treatment as saved in Firestore
+      const treatmentDoc = doc(db, 'treatments', treatmentId);
+      await setDoc(treatmentDoc, { saved: true }, { merge: true });
+
+      setShowSavedModal(true);
+    } catch (error) {
+      console.error('Error saving treatment:', error);
+      setShowSavedModal(true);
+    }
   };
 
   const handleDone = async () => {
@@ -211,9 +285,10 @@ export default function ScanResults() {
         return;
       }
 
-      const completedSteps = Object.values(checkedSteps).filter(Boolean).length;
-      const totalSteps = treatmentData.treatmentSteps.length;
-      const progress = Math.round((completedSteps / totalSteps) * 100);
+      // Calculate progress based on substeps
+      const totalSubSteps = treatmentData.treatmentSteps.reduce((sum, step) => sum + step.steps.length, 0);
+      const checkedSubStepsCount = Object.values(checkedSubSteps).filter(Boolean).length;
+      const progress = totalSubSteps > 0 ? Math.round((checkedSubStepsCount / totalSubSteps) * 100) : 0;
 
       // Use OpenAI-provided schedules from treatmentData
       const notificationSchedules = generateNotificationSchedulesFromTreatment(treatmentData);
@@ -231,6 +306,7 @@ export default function ScanResults() {
         date: new Date().toISOString(),
         treatmentData: treatmentData,
         checkedSteps: checkedSteps,
+        checkedSubSteps: checkedSubSteps,
         checkedMaterials: checkedMaterials,
         notificationSchedules: notificationSchedules,
       };
@@ -377,11 +453,38 @@ export default function ScanResults() {
           <div className={styles.twoColumnLayout}>
             {/* Left Column - Image and Details */}
             <div className={styles.leftColumn}>
-              {imageUrl && (
-                <div className={styles.imageSection}>
+              <div className={styles.imageSection}>
+                {imageUrl && (
                   <img src={imageUrl} alt="Scanned furniture" className={styles.furnitureImage} />
-                </div>
-              )}
+                )}
+                
+                {/* ML Wood Classification */}
+                {mahoganyData && (
+                  <div className={styles.mlClassification}>
+                    <div className={styles.mlHeader}>
+                      <span className={styles.mlTitle}>Wood Type: {mahoganyData.wood_type}</span>
+                    </div>
+                    <div className={styles.mlConfidenceBar}>
+                      <span className={styles.mlLabel}>ML Confidence:</span>
+                      <div className={styles.mlBar}>
+                        <div 
+                          className={styles.mlFill}
+                          style={{ width: `${mahoganyData.confidence}%` }}
+                        />
+                      </div>
+                      <span className={styles.mlValue}>{mahoganyData.confidence}%</span>
+                    </div>
+                    <div className={styles.mlDisclaimer}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      <span>Wood identification may be affected by image quality, lighting, or finish. Results are estimates.</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className={styles.damageDetails}>
                 <div className={styles.detailBadgeLarge}>{treatmentData.defectType}</div>
@@ -391,6 +494,44 @@ export default function ScanResults() {
                   </svg>
                   <span>{treatmentData.placement} {treatmentData.furnitureType}</span>
                 </div>
+                
+                {/* Severity Level Bar */}
+                {treatmentData.defectDescription && (
+                  <div className={styles.severitySection}>
+                    <div className={styles.severityLabel}>Severity Level</div>
+                    <div className={styles.severityBarContainer}>
+                      <div className={styles.severityBar}>
+                        <div 
+                          className={`${styles.severityFill} ${
+                            treatmentData.defectDescription.toLowerCase().includes('severe') || 
+                            treatmentData.defectDescription.toLowerCase().includes('significant') 
+                              ? styles.severityHigh 
+                              : treatmentData.defectDescription.toLowerCase().includes('moderate')
+                              ? styles.severityMedium
+                              : styles.severityLow
+                          }`}
+                          style={{ 
+                            width: treatmentData.defectDescription.toLowerCase().includes('severe') || 
+                                   treatmentData.defectDescription.toLowerCase().includes('significant')
+                              ? '85%' 
+                              : treatmentData.defectDescription.toLowerCase().includes('moderate')
+                              ? '60%'
+                              : '35%'
+                          }}
+                        />
+                      </div>
+                      <span className={styles.severityText}>
+                        {treatmentData.defectDescription.toLowerCase().includes('severe') || 
+                         treatmentData.defectDescription.toLowerCase().includes('significant')
+                          ? 'High' 
+                          : treatmentData.defectDescription.toLowerCase().includes('moderate')
+                          ? 'Medium'
+                          : 'Low'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <p className={styles.damageDescription}>{treatmentData.defectDescription}</p>
               </div>
             </div>
@@ -489,12 +630,24 @@ export default function ScanResults() {
                     <div 
                       className={styles.progressFill} 
                       style={{ 
-                        width: `${(Object.values(checkedSteps).filter(Boolean).length / treatmentData.treatmentSteps.length) * 100}%` 
+                        width: `${(() => {
+                          // Count total substeps
+                          const totalSubSteps = treatmentData.treatmentSteps.reduce((sum, step) => sum + step.steps.length, 0);
+                          // Count checked substeps
+                          const checkedSubStepsCount = Object.values(checkedSubSteps).filter(Boolean).length;
+                          // Calculate percentage
+                          return totalSubSteps > 0 ? Math.round((checkedSubStepsCount / totalSubSteps) * 100) : 0;
+                        })()}%` 
                       }}
                     ></div>
                   </div>
                   <p className={styles.progressText}>
-                    {Object.values(checkedSteps).filter(Boolean).length} of {treatmentData.treatmentSteps.length} steps completed
+                    {(() => {
+                      const totalSubSteps = treatmentData.treatmentSteps.reduce((sum, step) => sum + step.steps.length, 0);
+                      const checkedSubStepsCount = Object.values(checkedSubSteps).filter(Boolean).length;
+                      const percentage = totalSubSteps > 0 ? Math.round((checkedSubStepsCount / totalSubSteps) * 100) : 0;
+                      return `${percentage}% completed (${checkedSubStepsCount} of ${totalSubSteps} tasks)`;
+                    })()}
                   </p>
                 </div>
 
@@ -517,8 +670,19 @@ export default function ScanResults() {
                         </div>
                         <p className={styles.stepDescription}>{step.description}</p>
                         <ul className={styles.stepList}>
-                          {step.steps.map((substep, i) => (
-                            <li key={i}>{substep}</li>
+                          {step.steps.map((substep, subIndex) => (
+                            <li key={subIndex} className={styles.substepItem}>
+                              <label className={styles.substepCheckboxLabel}>
+                                <input
+                                  type="checkbox"
+                                  checked={checkedSubSteps[`${index}-${subIndex}`] || false}
+                                  onChange={() => handleSubStepCheck(index, subIndex)}
+                                  className={styles.substepCheckbox}
+                                />
+                                <span className={styles.substepCheckboxCustom}></span>
+                                <span className={styles.substepText}>{substep}</span>
+                              </label>
+                            </li>
                           ))}
                         </ul>
                       </div>

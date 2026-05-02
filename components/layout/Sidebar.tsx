@@ -46,9 +46,8 @@ export default function Sidebar() {
           const scheduledDate = new Date(schedule.scheduledTime);
           const isPast = scheduledDate <= now;
           
-          // Count notifications that are due OR upcoming within 24 hours
-          const hoursDiff = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-          if (isPast || hoursDiff <= 24) {
+          // Only count notifications that are due (scheduled time has passed)
+          if (isPast) {
             count++;
           }
         });

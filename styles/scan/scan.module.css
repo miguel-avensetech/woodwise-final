@@ -684,15 +684,19 @@
   justify-content: center;
   z-index: 9999;
   backdrop-filter: blur(4px);
+  padding: 1rem;
+  overflow-y: auto;
 }
 
 /* Details Form Modal */
 .detailsModal {
   background-color: #FFFFFF;
   border-radius: 20px;
-  padding: 2.5rem;
+  padding: 2rem 2rem 1.5rem;
   max-width: 520px;
   width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   position: relative;
   animation: modalSlideIn 0.3s ease-out;
@@ -730,7 +734,114 @@
   background-color: #F9F9F9;
   border-radius: 12px;
   padding: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.mahoganyInfo {
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 2px solid #81C784;
+}
+
+.nonMahoganyInfo {
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 2px solid #FFB74D;
+}
+
+.nonMahoganyInfo .mahoganyBadge {
+  color: #E65100;
+}
+
+.nonMahoganyInfo .mahoganyBadge svg {
+  stroke: #E65100;
+}
+
+.nonMahoganyInfo .confidenceLabel {
+  color: #BF360C;
+}
+
+.nonMahoganyInfo .confidenceValue {
+  color: #E65100;
+}
+
+.nonMahoganyInfo .progressFill {
+  background: linear-gradient(90deg, #FFB74D 0%, #FF9800 100%);
+}
+
+.disclaimer {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #BF360C;
+  line-height: 1.4;
+}
+
+.disclaimer svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  stroke: #E65100;
+}
+
+.mahoganyBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2E7D32;
+}
+
+.mahoganyBadge svg {
+  stroke: #2E7D32;
+  flex-shrink: 0;
+}
+
+.confidenceBar {
+  margin-top: 0.75rem;
+}
+
+.confidenceLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #1B5E20;
+  font-weight: 600;
+}
+
+.confidenceValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2E7D32;
+}
+
+.progressBar {
+  width: 100%;
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #66BB6A 0%, #43A047 100%);
+  border-radius: 6px;
+  transition: width 0.6s ease-out;
+  box-shadow: 0 2px 4px rgba(67, 160, 71, 0.3);
 }
 
 .defectTitle {
@@ -777,15 +888,41 @@
 }
 
 .formSection {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.mlDisclaimer {
+  background-color: #FFF9E6;
+  border-left: 3px solid #FFA726;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.mlDisclaimer svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  stroke: #F57C00;
+  width: 18px;
+  height: 18px;
+}
+
+.mlDisclaimer p {
+  font-size: 0.8rem;
+  color: #E65100;
+  line-height: 1.4;
+  margin: 0;
 }
 
 .formLabel {
   display: block;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #2C2C2C;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .optionGrid {
@@ -799,13 +936,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1.5rem 1rem;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
   background-color: #FFFFFF;
   border: 2px solid #E5E5E5;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 80px;
 }
 
 .optionButton:hover {
@@ -820,25 +958,28 @@
 
 .optionButton svg {
   stroke: #5D4E37;
+  width: 28px;
+  height: 28px;
 }
 
 .optionButton span {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #2C2C2C;
 }
 
 .continueButton {
   width: 100%;
-  padding: 1rem 2rem;
+  padding: 0.875rem 2rem;
   background-color: #5D4E37;
   border: none;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #FFFFFF;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-top: 0.5rem;
 }
 
 .continueButton:hover:not(:disabled) {
@@ -857,6 +998,7 @@
   .detailsModal {
     padding: 2rem 1.5rem;
     max-width: 95%;
+    max-height: 85vh;
   }
 
   .detailsHeader {
@@ -878,3 +1020,151 @@
     padding: 1.25rem;
   }
 }
+
+
+/* ML Server Toast */
+.mlServerToast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  border: 2px solid #FF9800;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(255, 152, 0, 0.3);
+  max-width: 450px;
+  z-index: 10000;
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.mlToastContent {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  position: relative;
+}
+
+.mlToastIcon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: #FF9800;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.mlToastText {
+  flex: 1;
+  padding-right: 1.5rem;
+}
+
+.mlToastTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #E65100;
+  margin: 0 0 0.5rem 0;
+}
+
+.mlToastMessage {
+  font-size: 0.9rem;
+  color: #5D4037;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.mlToastSteps {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  color: #4E342E;
+}
+
+.mlToastSteps p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.mlToastSteps ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.mlToastSteps li {
+  margin-bottom: 0.25rem;
+}
+
+.mlToastSteps code {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #D84315;
+}
+
+.mlToastClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: #E65100;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mlToastClose:hover {
+  background: rgba(230, 81, 0, 0.1);
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .mlServerToast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+
+  .mlToastContent {
+    padding: 1rem;
+  }
+
+  .mlToastIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mlToastTitle {
+    font-size: 1rem;
+  }
+
+  .mlToastMessage {
+    font-size: 0.85rem;
+  }
+
+  .mlToastSteps {
+    font-size: 0.8rem;
+  }
+}
+

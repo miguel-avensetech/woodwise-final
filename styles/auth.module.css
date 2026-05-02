@@ -245,3 +245,61 @@
 .backLink:hover {
   color: #b45309;
 }
+
+.successIcon {
+  text-align: center;
+  margin-bottom: 24px;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.successMessage {
+  padding: 1rem;
+  background-color: #D1FAE5;
+  border: 1px solid #6EE7B7;
+  border-radius: 8px;
+  color: #065F46;
+  font-size: 0.9rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.infoMessage {
+  padding: 1rem;
+  background-color: #DBEAFE;
+  border: 1px solid #93C5FD;
+  border-radius: 8px;
+  color: #1E40AF;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoMessage svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.infoMessage span {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.infoMessage strong {
+  font-weight: 600;
+}

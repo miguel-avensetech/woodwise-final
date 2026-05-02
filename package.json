@@ -6,14 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ml-api": "cd app/api/wood-classifier && python app.py"
   },
   "dependencies": {
     "firebase": "^12.8.0",
+    "firebase-admin": "^13.8.0",
     "next": "^15",
     "openai": "^6.27.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "resend": "^6.12.2"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -61,6 +61,7 @@ export default function Profile() {
       const querySnapshot = await getDocs(q);
       
       let totalTasks = 0;
+      let savedCount = 0;
       const treatments = querySnapshot.docs.length;
       
       querySnapshot.forEach((doc) => {
@@ -73,12 +74,17 @@ export default function Profile() {
         if (treatment.treatmentData?.maintenanceSchedule) {
           totalTasks += treatment.treatmentData.maintenanceSchedule.length;
         }
+        
+        // Count only saved treatments
+        if (treatment.saved === true) {
+          savedCount++;
+        }
       });
       
       setTotalScans(treatments);
       setFurnitureItems(treatments);
       setScheduledTasks(totalTasks);
-      setSavedItems(treatments);
+      setSavedItems(savedCount);
     } catch (error) {
       console.error('Error loading user stats:', error);
     } finally {

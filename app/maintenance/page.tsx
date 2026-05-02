@@ -234,7 +234,8 @@ export default function Maintenance() {
 
   const renderCalendar = () => {
     const days = [];
-    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+    // Always render exactly 6 rows (42 cells) for consistent sizing
+    const totalCells = 42;
 
     for (let i = 0; i < totalCells; i++) {
       const dayNumber = i - firstDay + 1;
@@ -266,10 +267,26 @@ export default function Maintenance() {
                   {filteredEvents.map((event, idx) => (
                     <div 
                       key={idx} 
-                      className={`${styles.eventText} ${event.type === 'maintenance' ? styles.maintenanceEvent : styles.treatmentEvent}`}
-                      title={`${event.furnitureName}: ${event.description}`}
+                      className={`${styles.eventBadge} ${event.type === 'maintenance' ? styles.maintenanceEvent : styles.treatmentEvent}`}
+                      onMouseEnter={(e) => {
+                        const tooltip = e.currentTarget.querySelector(`.${styles.eventTooltip}`) as HTMLElement;
+                        if (tooltip) {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                          tooltip.style.top = `${rect.top - 10}px`;
+                          tooltip.style.transform = 'translate(-50%, -100%)';
+                        }
+                      }}
                     >
-                      {event.type === 'maintenance' ? '🔧' : '🧴'} {event.title}
+                      <span className={styles.eventIcon}>{event.type === 'maintenance' ? '🔧' : '🧴'}</span>
+                      <span className={styles.eventName}>{event.furnitureName}</span>
+                      <div className={styles.eventTooltip}>
+                        <div className={styles.tooltipHeader}>
+                          {event.furnitureName}
+                        </div>
+                        <div className={styles.tooltipTitle}>{event.title}</div>
+                        <div className={styles.tooltipDescription}>{event.description}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -343,7 +360,6 @@ export default function Maintenance() {
                     className={`${styles.furnitureCard} ${selectedFurniture === item.id ? styles.selectedFurniture : ''}`}
                     onClick={() => handleFurnitureClick(item.id)}
                   >
-                    <div className={styles.furnitureIcon}>{item.icon}</div>
                     <div className={styles.furnitureInfo}>
                       <span className={styles.furnitureName}>{item.name}</span>
                       <span className={styles.furnitureStatus}> – {item.status}</span>

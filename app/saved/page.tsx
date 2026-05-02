@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, deleteDoc, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, orderBy, updateDoc } from "firebase/firestore";
 import Sidebar from "@/components/layout/Sidebar";
 import Modal from "@/components/Modal";
 import styles from "@/styles/saved/saved.module.css";
@@ -49,7 +49,7 @@ export default function Saved() {
     try {
       setLoading(true);
       const treatmentsRef = collection(db, 'treatments');
-      const q = query(treatmentsRef, where('userId', '==', userId), orderBy('date', 'desc'));
+      const q = query(treatmentsRef, where('userId', '==', userId), where('saved', '==', true), orderBy('date', 'desc'));
       const querySnapshot = await getDocs(q);
       
       const treatments: SavedTreatment[] = [];
@@ -87,14 +87,15 @@ export default function Saved() {
       setShowDeleteModal(false);
       
       const treatmentDoc = doc(db, 'treatments', deleteTargetId);
-      await deleteDoc(treatmentDoc);
+      // Instead of deleting, just mark as not saved
+      await updateDoc(treatmentDoc, { saved: false });
 
       // Update local state
       const updatedTreatments = savedTreatments.filter((t) => t.id !== deleteTargetId);
       setSavedTreatments(updatedTreatments);
       setDeleteTargetId(null);
     } catch (error) {
-      console.error('Error deleting treatment:', error);
+      console.error('Error removing from saved:', error);
       setShowDeleteModal(false);
       setDeleteTargetId(null);
     }
