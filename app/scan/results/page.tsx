@@ -534,6 +534,19 @@ export default function ScanResults() {
                 
                 <p className={styles.damageDescription}>{treatmentData.defectDescription}</p>
               </div>
+
+              <div className={styles.proContactCard}>
+                <div className={styles.proContactHeader}>
+                  <h3 className={styles.proContactTitle}>Need Professional Help?</h3>
+                  <span className={styles.proContactBadge}>Future Feature</span>
+                </div>
+                <p className={styles.proContactText}>
+                  Prefer expert assistance for restoration or deep repair? You can contact a verified wood care professional.
+                </p>
+                <button type="button" className={styles.proContactButton}>
+                  Contact a Professional
+                </button>
+              </div>
             </div>
 
             {/* Right Column - Treatment Plan */}
