@@ -36,20 +36,27 @@ export async function signInWithGoogle(): Promise<UserCredential> {
     const userCredential = await signInWithPopup(auth, provider);
     const user = userCredential.user;
 
+    console.log("Google sign-in successful for user:", user.uid);
+
     // Check if user document exists, if not create it
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     
     if (!userDoc.exists()) {
+      console.log("Creating new user document for Google user");
       // Create user document for new Google users
-      await setDoc(doc(db, 'users', user.uid), {
+      const userData = {
         uid: user.uid,
-        email: user.email,
+        email: user.email || '',
         displayName: user.displayName || 'Google User',
         photoURL: user.photoURL || null,
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),
-      });
+      };
+      
+      await setDoc(doc(db, 'users', user.uid), userData);
+      console.log("User document created successfully");
     } else {
+      console.log("Updating last login for existing user");
       // Update last login for existing users
       await setDoc(
         doc(db, 'users', user.uid),
@@ -87,6 +94,7 @@ export async function signUp(
 ): Promise<UserCredential> {
   try {
     console.log("Firebase auth object:", auth);
+    console.log("Firebase db object:", db);
     console.log("Attempting to create user with email:", email);
     
     // Create user account
@@ -96,18 +104,54 @@ export async function signUp(
     console.log("User created successfully:", user.uid);
 
     // Update user profile with display name
-    await updateProfile(user, {
-      displayName: displayName,
-    });
+    try {
+      await updateProfile(user, {
+        displayName: displayName,
+      });
+      console.log("Profile updated successfully");
+    } catch (profileError) {
+      console.error("Error updating profile:", profileError);
+      // Continue even if profile update fails
+    }
 
-    // Create user document in Firestore
-    await setDoc(doc(db, 'users', user.uid), {
+    // Create user document in Firestore with retry logic
+    const userData = {
       uid: user.uid,
-      email: user.email,
+      email: user.email || email,
       displayName: displayName,
+      photoURL: null,
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
-    });
+    };
+
+    console.log("Creating Firestore document with data:", userData);
+    
+    try {
+      await setDoc(doc(db, 'users', user.uid), userData);
+      console.log("Firestore document created successfully");
+      
+      // Verify the document was created
+      const verifyDoc = await getDoc(doc(db, 'users', user.uid));
+      if (verifyDoc.exists()) {
+        console.log("Verified: User document exists in Firestore");
+      } else {
+        console.error("Warning: User document not found after creation");
+      }
+    } catch (firestoreError: any) {
+      console.error("Firestore write error:", firestoreError);
+      console.error("Firestore error code:", firestoreError.code);
+      console.error("Firestore error message:", firestoreError.message);
+      
+      // Try one more time with a delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        await setDoc(doc(db, 'users', user.uid), userData);
+        console.log("Firestore document created on retry");
+      } catch (retryError) {
+        console.error("Firestore retry failed:", retryError);
+        // Don't throw - user account is created, just log the error
+      }
+    }
 
     return userCredential;
   } catch (error: any) {

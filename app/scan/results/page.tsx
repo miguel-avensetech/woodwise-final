@@ -186,6 +186,7 @@ export default function ScanResults() {
           checkedSubSteps: checkedSubSteps,
           checkedMaterials: checkedMaterials,
           notificationSchedules: notificationSchedules,
+          recent: true,
         };
 
         // Save to Firestore: treatments/{treatmentId}
@@ -262,9 +263,12 @@ export default function ScanResults() {
         return;
       }
 
-      // Mark treatment as saved in Firestore
+      // Mark treatment as saved in Firestore (keeps it in recent too)
       const treatmentDoc = doc(db, 'treatments', treatmentId);
-      await setDoc(treatmentDoc, { saved: true }, { merge: true });
+      await setDoc(treatmentDoc, { 
+        saved: true,
+        recent: true 
+      }, { merge: true });
 
       setShowSavedModal(true);
     } catch (error) {
@@ -309,6 +313,8 @@ export default function ScanResults() {
         checkedSubSteps: checkedSubSteps,
         checkedMaterials: checkedMaterials,
         notificationSchedules: notificationSchedules,
+        recent: true,
+        saved: false,
       };
 
       // Save to Firestore

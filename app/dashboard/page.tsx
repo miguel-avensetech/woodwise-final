@@ -60,7 +60,7 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const treatmentsRef = collection(db, 'treatments');
-      const q = query(treatmentsRef, where('userId', '==', userId), orderBy('date', 'desc'));
+      const q = query(treatmentsRef, where('userId', '==', userId), where('recent', '==', true), orderBy('date', 'desc'));
       const querySnapshot = await getDocs(q);
       
       const treatments: SavedTreatment[] = [];
@@ -126,15 +126,27 @@ export default function Dashboard() {
     try {
       const treatmentDoc = doc(db, 'treatments', deleteTargetId);
       
-      await deleteDoc(treatmentDoc);
+      // Check if treatment is saved
+      const treatment = savedTreatments.find(t => t.id === deleteTargetId);
+      const isSaved = treatment && (treatment as any).saved === true;
+      
+      if (isSaved) {
+        // If saved, only remove from recent (keep in saved/maintenance)
+        await updateDoc(treatmentDoc, { recent: false });
+      } else {
+        // If not saved, delete the document completely
+        await deleteDoc(treatmentDoc);
+      }
 
       // Update local state
       const updatedTreatments = savedTreatments.filter((t: SavedTreatment) => t.id !== deleteTargetId);
       setSavedTreatments(updatedTreatments);
       setActiveMenu(null);
       setDeleteTargetId(null);
+      setShowDeleteModal(false);
     } catch (error) {
       console.error('Error deleting treatment:', error);
+      setShowDeleteModal(false);
     }
   };
 

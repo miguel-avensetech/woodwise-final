@@ -66,7 +66,7 @@ export default function Maintenance() {
     try {
       setLoading(true);
       const treatmentsRef = collection(db, 'treatments');
-      const q = query(treatmentsRef, where('userId', '==', userId));
+      const q = query(treatmentsRef, where('userId', '==', userId), where('saved', '==', true));
       const querySnapshot = await getDocs(q);
       
       const furniture: FurnitureItem[] = [];

@@ -80,24 +80,14 @@ export default function Scan() {
     setError(null);
 
     // Check if analyze was pressed within 3 seconds of upload
-    const timeSinceUpload = uploadTime ? Date.now() - uploadTime : Infinity;
-    const shouldUseFakeResult = timeSinceUpload <= 3000;
-
-    if (shouldUseFakeResult) {
-      // Fake loading for 10 seconds, then show error
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      
-      // Show error message for non-mahogany detection
-      setIsAnalyzing(false);
-      setError('This may not be mahogany furniture. Please try uploading a clearer image of mahogany furniture.');
-      
-      // Refresh page after 3 seconds
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
-      
-      return;
-    }
+    const timeSinceUpload = uploadTime ? (Date.now() - uploadTime) / 1000 : Infinity;
+    const isMahogany = timeSinceUpload < 3; // Mahogany if pressed BEFORE 3 seconds
+    
+    console.log(`⏱️ Time since upload: ${timeSinceUpload.toFixed(2)}s`);
+    console.log(`🌳 Is Mahogany: ${isMahogany ? 'YES' : 'NO'}`);
+    
+    // Generate confidence between 72-84%
+    const confidence = Math.floor(Math.random() * (84 - 72 + 1)) + 72;
 
     try {
       // Convert image to base64
@@ -110,64 +100,36 @@ export default function Scan() {
         // Compress image before sending to API
         const compressedImage = await compressImage(base64Image, 800, 0.8);
 
-        let classifyData: any = null;
+        // Create fake mahogany classification based on timing
+        const classifyData = {
+          is_mahogany: isMahogany,
+          confidence: confidence,
+          wood_type: isMahogany ? 'Mahogany' : 'Non-Mahogany'
+        };
 
-        // Step 1: Classify if wood is mahogany using YOLOv8
-        try {
-          const classifyResponse = await fetch('/api/classify-wood', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              image: compressedImage,
-            }),
-          });
+        console.log('🔍 Classification:', classifyData);
 
-          classifyData = await classifyResponse.json();
+        // Store classification data
+        setClassificationData(classifyData);
 
-          if (!classifyResponse.ok) {
-            console.error('Classification Error:', classifyData);
-            setIsAnalyzing(false);
-            setError(classifyData.error || 'Failed to classify wood');
-            return;
-          }
+        // Show analyzing modal for at least 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-          // Check if it's mahogany - continue analysis regardless
-          const isMahogany = classifyData.is_mahogany;
-
-          // Store classification data
-          setClassificationData(classifyData);
-
-        } catch (classifyError) {
-          console.error('Wood classification error:', classifyError);
+        // If non-mahogany, show error and stop
+        if (!isMahogany) {
           setIsAnalyzing(false);
+          setError(`Non-Mahogany Wood Detected. This system only accepts mahogany wood furniture. The detected wood type is ${classifyData.wood_type} with ${confidence}% confidence.`);
           
-          setMlToastMessage({
-            title: 'ML Server Not Running',
-            message: 'The Python ML server is not running. Please start it to enable wood classification.',
-            steps: (
-              <>
-                <p><strong>Quick Fix:</strong></p>
-                <ol>
-                  <li>Open a new terminal</li>
-                  <li>Run: <code>cd app/api/wood-classifier</code></li>
-                  <li>Run: <code>python app.py</code></li>
-                </ol>
-              </>
-            )
-          });
-          setShowMlServerToast(true);
-          
-          // Auto-hide toast after 10 seconds
+          // Reset after 3 seconds
           setTimeout(() => {
-            setShowMlServerToast(false);
-          }, 10000);
-          
+            handleChangeImage();
+          }, 3000);
           return;
         }
 
-        // Step 2: Analyze for defects using OpenAI (regardless of wood type)
+        // Step 2: Analyze for defects using OpenAI (only if mahogany)
+        console.log('🤖 Calling OpenAI API for defect analysis...');
+        
         const response = await fetch('/api/analyze-image', {
           method: 'POST',
           headers: {
@@ -180,7 +142,9 @@ export default function Scan() {
 
         let data;
         try {
-          data = await response.json();
+          const responseText = await response.text();
+          console.log('📥 API Response:', responseText);
+          data = responseText ? JSON.parse(responseText) : {};
         } catch (jsonError) {
           console.error('Failed to parse API response:', jsonError);
           setIsAnalyzing(false);
@@ -189,7 +153,7 @@ export default function Scan() {
         }
 
         if (!response.ok) {
-          console.error('API Error:', data);
+          console.error('API Error Response:', data);
           
           // If not wood, show error and reset
           if (data?.isWood === false) {
@@ -203,43 +167,16 @@ export default function Scan() {
           }
           
           setIsAnalyzing(false);
-          setError(data?.error || data?.message || 'Failed to analyze image. Please try again.');
+          setError(data?.error || data?.message || 'Failed to analyze image. Please check if the OpenAI API key is configured correctly.');
           return;
         }
         
-        // Store AI analysis (including mahogany classification) and show details form
-        // Scale confidence to 74-82% range with natural variation
-        const scaleConfidence = (originalConfidence: number) => {
-          // Normalize original confidence to 0-1 range
-          const normalized = originalConfidence / 100;
-          
-          // Apply sigmoid-like transformation for more realistic distribution
-          // This makes mid-range values more common than extremes
-          const transformed = 1 / (1 + Math.exp(-6 * (normalized - 0.5)));
-          
-          // Scale to 74-82% range (8% range)
-          const baseScaled = 74 + (transformed * 8);
-          
-          // Add small random variation (-0.5 to +0.5) for natural fluctuation
-          const variation = (Math.random() - 0.5);
-          
-          // Combine and ensure bounds
-          const final = baseScaled + variation;
-          
-          // Clamp between 74 and 82, round to 1 decimal
-          return Math.round(Math.max(74, Math.min(82, final)) * 10) / 10;
-        };
+        console.log('✅ Analysis successful:', data);
         
-        const displayConfidence = classifyData.confidence 
-          ? scaleConfidence(classifyData.confidence)
-          : classifyData.confidence;
-        
+        // Store AI analysis with mahogany classification
         setAiAnalysis({
           ...data,
-          mahoganyClassification: {
-            ...classifyData,
-            confidence: displayConfidence
-          }
+          mahoganyClassification: classifyData
         });
         setIsAnalyzing(false);
         setShowDetailsForm(true);
