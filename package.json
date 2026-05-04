@@ -12,6 +12,7 @@
   "dependencies": {
     "firebase": "^12.8.0",
     "firebase-admin": "^13.8.0",
+    "jspdf": "^4.2.1",
     "next": "^15",
     "openai": "^6.27.0",
     "react": "^18",

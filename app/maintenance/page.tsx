@@ -35,6 +35,9 @@ export default function Maintenance() {
   const [selectedFurniture, setSelectedFurniture] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedFurnitureDetails, setSelectedFurnitureDetails] = useState<FurnitureItem | null>(null);
+  const [showDayModal, setShowDayModal] = useState(false);
+  const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[]>([]);
+  const [selectedDayDate, setSelectedDayDate] = useState<string>('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -66,7 +69,7 @@ export default function Maintenance() {
     try {
       setLoading(true);
       const treatmentsRef = collection(db, 'treatments');
-      const q = query(treatmentsRef, where('userId', '==', userId), where('saved', '==', true));
+      const q = query(treatmentsRef, where('userId', '==', userId));
       const querySnapshot = await getDocs(q);
       
       const furniture: FurnitureItem[] = [];
@@ -74,6 +77,9 @@ export default function Maintenance() {
 
       querySnapshot.forEach((doc) => {
         const treatment = doc.data();
+        
+        // Only process saved treatments
+        if (treatment.saved !== true) return;
         
         // Add to furniture list
         furniture.push({
@@ -187,8 +193,20 @@ export default function Maintenance() {
       setSelectedFurnitureDetails(furniture);
       setShowDetailsModal(true);
     }
-    // Also toggle selection for calendar filtering
-    setSelectedFurniture(selectedFurniture === furnitureId ? null : furnitureId);
+  };
+
+  const handleDayClick = (dayNumber: number) => {
+    const dayEvents = getEventForDay(dayNumber);
+    if (dayEvents.length > 0) {
+      // Sort events by furniture name to group them together
+      const sortedEvents = [...dayEvents].sort((a, b) => 
+        a.furnitureName.localeCompare(b.furnitureName)
+      );
+      setSelectedDayEvents(sortedEvents);
+      const dateStr = `${currentMonth.toLocaleString('default', { month: 'long' })} ${dayNumber}, ${currentMonth.getFullYear()}`;
+      setSelectedDayDate(dateStr);
+      setShowDayModal(true);
+    }
   };
 
   const closeDetailsModal = () => {
@@ -234,7 +252,6 @@ export default function Maintenance() {
 
   const renderCalendar = () => {
     const days = [];
-    // Always render exactly 6 rows (42 cells) for consistent sizing
     const totalCells = 42;
 
     for (let i = 0; i < totalCells; i++) {
@@ -244,51 +261,30 @@ export default function Maintenance() {
       const dayEvents = isValidDay ? getEventForDay(dayNumber) : [];
       const hasEvents = dayEvents.length > 0;
 
-      // Filter events if a furniture is selected
-      const filteredEvents = selectedFurniture
-        ? dayEvents.filter(e => {
-            const furniture = furnitureItems.find(f => f.name === e.furnitureName);
-            return furniture?.id === selectedFurniture;
-          })
-        : dayEvents;
-
-      const showEvents = filteredEvents.length > 0;
-
       days.push(
         <div 
           key={i} 
-          className={`${styles.calendarDay} ${!isValidDay ? styles.emptyDay : ''} ${isTodayDay ? styles.todayDay : ''} ${showEvents ? styles.eventDay : ''}`}
+          className={`${styles.calendarDay} ${!isValidDay ? styles.emptyDay : ''} ${isTodayDay ? styles.todayDay : ''} ${hasEvents ? styles.eventDay : ''} ${hasEvents ? styles.clickableDay : ''}`}
+          onClick={() => isValidDay && hasEvents && handleDayClick(dayNumber)}
         >
           {isValidDay && (
             <>
               <span className={styles.dayNumber}>{dayNumber}</span>
-              {showEvents && (
+              {hasEvents && (
                 <div className={styles.eventsContainer}>
-                  {filteredEvents.map((event, idx) => (
+                  {dayEvents.slice(0, 2).map((event, idx) => (
                     <div 
                       key={idx} 
                       className={`${styles.eventBadge} ${event.type === 'maintenance' ? styles.maintenanceEvent : styles.treatmentEvent}`}
-                      onMouseEnter={(e) => {
-                        const tooltip = e.currentTarget.querySelector(`.${styles.eventTooltip}`) as HTMLElement;
-                        if (tooltip) {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          tooltip.style.left = `${rect.left + rect.width / 2}px`;
-                          tooltip.style.top = `${rect.top - 10}px`;
-                          tooltip.style.transform = 'translate(-50%, -100%)';
-                        }
-                      }}
                     >
-                      <span className={styles.eventIcon}>{event.type === 'maintenance' ? '🔧' : '🧴'}</span>
-                      <span className={styles.eventName}>{event.furnitureName}</span>
-                      <div className={styles.eventTooltip}>
-                        <div className={styles.tooltipHeader}>
-                          {event.furnitureName}
-                        </div>
-                        <div className={styles.tooltipTitle}>{event.title}</div>
-                        <div className={styles.tooltipDescription}>{event.description}</div>
-                      </div>
+                      <span className={styles.eventTitle}>{event.title}</span>
                     </div>
                   ))}
+                  {dayEvents.length > 2 && (
+                    <div className={styles.moreEvents}>
+                      +{dayEvents.length - 2} more
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -504,6 +500,98 @@ export default function Maintenance() {
             <button 
               className={styles.closeModalButton}
               onClick={closeDetailsModal}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Day Details Modal */}
+      {showDayModal && (
+        <div className={styles.detailsModalOverlay} onClick={() => setShowDayModal(false)}>
+          <div className={styles.dayModal} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.closeButton}
+              onClick={() => setShowDayModal(false)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+
+            <div className={styles.dayModalHeader}>
+              <div className={styles.dayModalIcon}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
+              <h2 className={styles.dayModalTitle}>{selectedDayDate}</h2>
+              <p className={styles.dayModalSubtitle}>{selectedDayEvents.length} scheduled {selectedDayEvents.length === 1 ? 'task' : 'tasks'}</p>
+            </div>
+
+            <div className={styles.dayEventsList}>
+              {(() => {
+                // Group events by furniture name
+                const groupedEvents: { [key: string]: CalendarEvent[] } = {};
+                selectedDayEvents.forEach(event => {
+                  if (!groupedEvents[event.furnitureName]) {
+                    groupedEvents[event.furnitureName] = [];
+                  }
+                  groupedEvents[event.furnitureName].push(event);
+                });
+
+                return Object.entries(groupedEvents).map(([furnitureName, events]) => (
+                  <div key={furnitureName} className={styles.furnitureGroup}>
+                    <div className={styles.furnitureGroupHeader}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                      </svg>
+                      <h3 className={styles.furnitureGroupTitle}>{furnitureName}</h3>
+                      <span className={styles.furnitureGroupCount}>{events.length} {events.length === 1 ? 'task' : 'tasks'}</span>
+                    </div>
+                    <div className={styles.furnitureGroupEvents}>
+                      {events.map((event, index) => (
+                        <div key={index} className={`${styles.dayEventCard} ${event.type === 'maintenance' ? styles.maintenanceCard : styles.treatmentCard}`}>
+                          <div className={styles.dayEventContent}>
+                            <div className={styles.dayEventHeader}>
+                              <h4 className={styles.dayEventTitle}>{event.title}</h4>
+                              <span className={`${styles.dayEventType} ${event.type === 'maintenance' ? styles.maintenanceType : styles.treatmentType}`}>
+                                {event.type === 'maintenance' ? 'Maintenance' : 'Treatment'}
+                              </span>
+                            </div>
+                            <p className={styles.dayEventDescription}>{event.description}</p>
+                            <p className={styles.dayEventTime}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                              </svg>
+                              {new Date(event.date).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                            </p>
+                            {event.priority && (
+                              <span className={`${styles.priorityBadge} ${styles[`priority${event.priority.charAt(0).toUpperCase() + event.priority.slice(1)}`]}`}>
+                                {event.priority.charAt(0).toUpperCase() + event.priority.slice(1)} Priority
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            <button 
+              className={styles.closeModalButton}
+              onClick={() => setShowDayModal(false)}
             >
               Close
             </button>

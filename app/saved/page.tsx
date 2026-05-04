@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, doc, orderBy, updateDoc } from "fire
 import Sidebar from "@/components/layout/Sidebar";
 import Modal from "@/components/Modal";
 import styles from "@/styles/saved/saved.module.css";
+import jsPDF from "jspdf";
 
 interface SavedTreatment {
   id: string;
@@ -49,12 +50,16 @@ export default function Saved() {
     try {
       setLoading(true);
       const treatmentsRef = collection(db, 'treatments');
-      const q = query(treatmentsRef, where('userId', '==', userId), where('saved', '==', true), orderBy('date', 'desc'));
+      const q = query(treatmentsRef, where('userId', '==', userId), orderBy('date', 'desc'));
       const querySnapshot = await getDocs(q);
       
       const treatments: SavedTreatment[] = [];
       querySnapshot.forEach((doc) => {
-        treatments.push(doc.data() as SavedTreatment);
+        const data = doc.data();
+        // Filter for saved treatments in client-side
+        if (data.saved === true) {
+          treatments.push(data as SavedTreatment);
+        }
       });
       
       setSavedTreatments(treatments);
@@ -83,9 +88,6 @@ export default function Saved() {
     if (!currentUserId || !deleteTargetId) return;
     
     try {
-      // Close modal first
-      setShowDeleteModal(false);
-      
       const treatmentDoc = doc(db, 'treatments', deleteTargetId);
       // Instead of deleting, just mark as not saved
       await updateDoc(treatmentDoc, { saved: false });
@@ -93,12 +95,113 @@ export default function Saved() {
       // Update local state
       const updatedTreatments = savedTreatments.filter((t) => t.id !== deleteTargetId);
       setSavedTreatments(updatedTreatments);
+      
+      // Close modal after successful operation
+      setShowDeleteModal(false);
       setDeleteTargetId(null);
     } catch (error) {
       console.error('Error removing from saved:', error);
+      // Close modal even on error
       setShowDeleteModal(false);
       setDeleteTargetId(null);
     }
+  };
+
+  const handleDownloadPDF = (treatment: SavedTreatment) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPos = 20;
+    const margin = 20;
+    const lineHeight = 7;
+
+    // Helper function to add text with word wrap
+    const addText = (text: string, x: number, fontSize: number = 11, isBold: boolean = false) => {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      const lines = doc.splitTextToSize(text, pageWidth - 2 * margin);
+      lines.forEach((line: string) => {
+        if (yPos > pageHeight - 20) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.text(line, x, yPos);
+        yPos += lineHeight;
+      });
+    };
+
+    // Title
+    doc.setFillColor(93, 78, 55); // Brown color
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(treatment.title, pageWidth / 2, 25, { align: 'center' });
+    
+    yPos = 50;
+    doc.setTextColor(0, 0, 0);
+
+    // Furniture Details
+    addText('FURNITURE DETAILS', margin, 14, true);
+    yPos += 3;
+    addText(`Type: ${treatment.furnitureType}`, margin + 5, 11);
+    addText(`Placement: ${treatment.placement}`, margin + 5, 11);
+    addText(`Defect: ${treatment.defectType}`, margin + 5, 11);
+    addText(`Description: ${treatment.description}`, margin + 5, 11);
+    addText(`Progress: ${treatment.progress}%`, margin + 5, 11);
+    yPos += 5;
+
+    // Materials Needed
+    if (treatment.treatmentData?.materialsNeeded) {
+      addText('MATERIALS NEEDED', margin, 14, true);
+      yPos += 3;
+      treatment.treatmentData.materialsNeeded.forEach((material: any, index: number) => {
+        addText(`${index + 1}. ${material.name}${material.quantity ? ` - ${material.quantity}` : ''}`, margin + 5, 11);
+      });
+      yPos += 5;
+    }
+
+    // Treatment Steps
+    if (treatment.treatmentData?.treatmentSteps) {
+      addText('TREATMENT STEPS', margin, 14, true);
+      yPos += 3;
+      treatment.treatmentData.treatmentSteps.forEach((step: any, index: number) => {
+        addText(`${index + 1}. ${step.title}`, margin + 5, 12, true);
+        addText(step.description, margin + 10, 10);
+        step.steps.forEach((substep: string, subIndex: number) => {
+          addText(`   ${String.fromCharCode(97 + subIndex)}. ${substep}`, margin + 10, 10);
+        });
+        if (step.scheduledDate) {
+          addText(`   Scheduled: ${new Date(step.scheduledDate).toLocaleString()}`, margin + 10, 9);
+        }
+        yPos += 3;
+      });
+    }
+
+    // Maintenance Schedule
+    if (treatment.treatmentData?.maintenanceSchedule && treatment.treatmentData.maintenanceSchedule.length > 0) {
+      yPos += 5;
+      addText('MAINTENANCE SCHEDULE', margin, 14, true);
+      yPos += 3;
+      treatment.treatmentData.maintenanceSchedule.forEach((maintenance: any, index: number) => {
+        addText(`${index + 1}. ${maintenance.title}`, margin + 5, 12, true);
+        addText(maintenance.description, margin + 10, 10);
+        addText(`   Frequency: ${maintenance.frequency}`, margin + 10, 9);
+        addText(`   Priority: ${maintenance.priority}`, margin + 10, 9);
+        if (maintenance.scheduledDate) {
+          addText(`   Scheduled: ${new Date(maintenance.scheduledDate).toLocaleString()}`, margin + 10, 9);
+        }
+        yPos += 3;
+      });
+    }
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Generated by WoodWise on ${new Date().toLocaleDateString()}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+    // Save PDF
+    doc.save(`${treatment.title.replace(/[^a-z0-9]/gi, '_')}_Treatment_Plan.pdf`);
   };
 
   const getProgressColor = (progress: number) => {
@@ -186,6 +289,17 @@ export default function Saved() {
                   </div>
                   
                   <div className={styles.cardFooter}>
+                    <button 
+                      className={styles.downloadButton}
+                      onClick={() => handleDownloadPDF(treatment)}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Download PDF
+                    </button>
                     <button 
                       className={styles.removeButton}
                       onClick={() => handleDelete(treatment.id)}

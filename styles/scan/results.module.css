@@ -98,6 +98,37 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.downloadPdfButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4B2E14;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.downloadPdfButton:hover {
+  background-color: #FFF7EC;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.downloadPdfButton svg {
+  stroke: #4B2E14;
+}
+
 .saveButtonHeader {
   display: inline-flex;
   align-items: center;
@@ -218,6 +249,61 @@
   color: #666666;
   line-height: 1.6;
   margin: 0;
+}
+
+.proContactCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E8DCCB;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.proContactHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.proContactTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2C2C2C;
+}
+
+.proContactBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #8A6A3F;
+  background-color: #FFF3CD;
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  white-space: nowrap;
+}
+
+.proContactText {
+  margin: 0 0 1rem 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #666666;
+}
+
+.proContactButton {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #6A523A 0%, #4B2E14 100%);
+  cursor: default;
+  opacity: 0.9;
 }
 
 .mlClassification {

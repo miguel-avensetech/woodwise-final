@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert in mahogany wood furniture care and restoration. Generate comprehensive treatment plans based on defect analysis.`
+          content: `You are an expert in mahogany wood furniture care and restoration. Generate comprehensive treatment plans based on defect analysis. CRITICAL: Focus treatment on ONLY the SINGLE MOST SEVERE defect identified (cracks, scratches, or mold). Do not address multiple defects - only the one provided in the analysis.`
         },
         {
           role: "user",
@@ -34,10 +34,12 @@ FURNITURE DETAILS:
 - Placement: ${placement}
 
 AI ANALYSIS RESULTS:
-- Defect Type: ${aiAnalysis.defectType}
+- Defect Type: ${aiAnalysis.defectType} (ONLY treat this defect)
 - Description: ${aiAnalysis.defectDescription}
 - Severity: ${aiAnalysis.severity || 'Not specified'}
-- Defects Found: ${aiAnalysis.defects?.join(', ') || 'None'}
+
+CRITICAL: This treatment plan should address ONLY the defect type specified above.
+Do not mention or treat any other defects.
 
 IMPORTANT: Generate a comprehensive treatment plan with SPECIFIC DATES AND TIMES for each maintenance task.
 Current date and time: ${new Date().toISOString()}

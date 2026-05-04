@@ -25,8 +25,10 @@ export async function POST(request: NextRequest) {
           role: "system",
           content: `You are an expert in wood furniture analysis. Your task is to:
 1. Verify if the image shows wooden furniture
-2. If it's wood, identify defects and their severity
-3. Provide accurate, detailed analysis`
+2. If it's wood, identify ONLY the SINGLE MOST SEVERE defect from: CRACKS, SCRATCHES, or MOLD
+3. If multiple defects exist, return ONLY the one that causes the most damage
+4. Severity ranking: Severe > Moderate > Light. If same severity, prioritize: Cracks > Mold > Scratches
+5. Provide accurate, detailed analysis of ONLY that one defect`
         },
         {
           role: "user",
@@ -39,29 +41,34 @@ STEP 1: Is this wooden furniture?
 - Look for wood grain, texture, natural patterns
 - If NOT wood (plastic, metal, fabric, etc.), respond with isWood: false
 
-STEP 2: If it IS wood, identify defects:
+STEP 2: If it IS wood, identify ONLY the SINGLE MOST SEVERE defect from these 3 types:
 - Scratches (light/moderate/severe)
 - Mold or mildew (light/moderate/severe)
 - Cracks or splits (light/moderate/severe)
-- Discoloration
-- Water damage
-- Worn finish
-- Or "No visible defects"
 
-STEP 3: Determine severity level
+CRITICAL RULE: Return ONLY ONE defect type - the MOST SEVERE one
+- If multiple defects exist, analyze which one causes the MOST DAMAGE to the wood
+- Severity ranking: Severe > Moderate > Light
+- If same severity level, prioritize: Cracks > Mold > Scratches
+- Example: If "light mold" and "severe scratches" exist, return ONLY "Scratches Detected"
+- Example: If "moderate cracks" and "moderate scratches" exist, return ONLY "Cracks Detected"
+
+IGNORE all other defect types (discoloration, water damage, worn finish, peeling, dents, etc.)
+
+STEP 3: Determine severity level of the SINGLE most severe defect
 
 Respond in this EXACT JSON format:
 {
   "isWood": true or false,
   "reason": "Brief explanation if not wood",
-  "defectType": "Primary defect (e.g., 'Scratches Detected', 'Mold Found', 'Cracks Detected', 'No Issues Found')",
-  "defectDescription": "Detailed description of what you see",
-  "severity": "Light" or "Moderate" or "Severe" (only if defects found),
-  "defects": ["list", "of", "all", "defects", "found"]
+  "defectType": "ONLY ONE defect (ONLY: 'Scratches Detected', 'Mold Found', or 'Cracks Detected')",
+  "defectDescription": "Detailed description of ONLY the most severe defect",
+  "severity": "Light" or "Moderate" or "Severe" (only if defects found)
 }
 
 If isWood is false, only include: isWood, reason.
-Be accurate and thorough.`
+Return ONLY the MOST SEVERE defect, not multiple defects.
+Be accurate and focus on the single most damaging issue.`
             },
             {
               type: "image_url",

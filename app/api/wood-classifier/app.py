@@ -119,8 +119,8 @@ def predict():
         temp_path = 'temp_image.jpg'
         image.save(temp_path)
         
-        # Run prediction
-        results = model(temp_path)
+        # Run prediction 
+        results = model(temp_path, verbose=False)
         result = results[0]
         
         # Get prediction details
@@ -206,8 +206,8 @@ def predict_base64():
         temp_path = 'temp_image.jpg'
         image.save(temp_path)
         
-        # Run prediction
-        results = model(temp_path)
+        # Run prediction (verbose=False to suppress console output)
+        results = model(temp_path, verbose=False)
         result = results[0]
         
         class_id = result.probs.top1

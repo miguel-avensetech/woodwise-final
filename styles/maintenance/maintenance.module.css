@@ -442,15 +442,15 @@
 }
 
 .treatmentEvent {
-  background-color: #E3F2FD;
-  border-left-color: #2196F3;
+  background: #E3F2FD;
   color: #1565C0;
+  border-left: 3px solid #1976D2;
 }
 
 .maintenanceEvent {
-  background-color: #FFF3E0;
-  border-left-color: #FF9800;
+  background: #FFF3E0;
   color: #E65100;
+  border-left: 3px solid #F57C00;
 }
 
 /* Loading State */
@@ -884,4 +884,240 @@
   .stepNumber {
     margin: 0 auto;
   }
+}
+
+/* Clickable Day */
+.clickableDay {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickableDay:hover {
+  background-color: #F5F1E8;
+  transform: scale(1.02);
+}
+
+.eventTitle {
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.moreEvents {
+  font-size: 0.65rem;
+  color: #666;
+  text-align: center;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* Day Modal */
+.dayModal {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.dayModalHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #E5E5E5;
+}
+
+.dayModalIcon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: #5D4E37;
+}
+
+.dayModalTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-bottom: 0.5rem;
+}
+
+.dayModalSubtitle {
+  font-size: 1rem;
+  color: #666;
+}
+
+.dayEventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dayEventCard {
+  padding: 1.25rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.treatmentCard {
+  background: #E3F2FD;
+  border-left: 4px solid #1976D2;
+}
+
+.treatmentCard:hover {
+  background: #BBDEFB;
+  transform: translateX(4px);
+}
+
+.maintenanceCard {
+  background: #FFF3E0;
+  border-left: 4px solid #F57C00;
+}
+
+.maintenanceCard:hover {
+  background: #FFE0B2;
+  transform: translateX(4px);
+}
+
+.dayEventIcon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.dayEventContent {
+  flex: 1;
+}
+
+.dayEventHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dayEventTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2C2C2C;
+  margin: 0;
+}
+
+.dayEventType {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.treatmentType {
+  background: #E3F2FD;
+  color: #1976D2;
+}
+
+.maintenanceType {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+.dayEventFurniture {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0.5rem 0;
+}
+
+.dayEventDescription {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0.5rem 0;
+}
+
+.dayEventTime {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.75rem;
+}
+
+.priorityBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.priorityHigh {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.priorityMedium {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+.priorityLow {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+/* Furniture Grouping in Day Modal */
+.furnitureGroup {
+  margin-bottom: 2rem;
+}
+
+.furnitureGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #5D4E37;
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.furnitureGroupTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.furnitureGroupCount {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.furnitureGroupEvents {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-left: 1rem;
+}
+
+.dayEventTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2C2C2C;
+  margin: 0;
 }

@@ -361,3 +361,37 @@
     height: 180px;
   }
 }
+
+/* Severity Badge */
+.severityBadge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.severityLight {
+  background: #4CAF50;
+  color: white;
+}
+
+.severityModerate {
+  background: #FF9800;
+  color: white;
+}
+
+.severitySevere {
+  background: #F44336;
+  color: white;
+}
+
+.treatmentImage {
+  position: relative;
+}
